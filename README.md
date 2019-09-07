@@ -31,7 +31,7 @@ export class AppModule {}
 ```ts
 @Controller()
 @UseInterceptors(CacheDependencyInterceptor)
-export class BasicTestController {
+export class ExampleController {
   @Get("parents/:parentID")
   @CacheKey("parent/:parentID")
   @CacheDependency<Parent>((response: Parent, graph: CacheDependencyGraph) => {
@@ -55,7 +55,7 @@ export class BasicTestController {
 
 ```ts
 @Injectable()
-export class UseWithServiceService {
+export class ExampleService {
   constructor(private readonly cacheService: CacheDependencyService) {}
 
   public async getParent(parentID: number): Promise<Parent> {
