@@ -34,10 +34,10 @@ export class AppModule {}
 export class BasicTestController {
   @Get("parents/:parentID")
   @CacheKey("parent/:parentID")
-  @CacheDependency<Parent>((o: Parent, graph: DepGraph<any>) => {
-    for (const child of o.children) {
+  @CacheDependency<Parent>((response: Parent, graph: CacheDependencyGraph) => {
+    for (const child of response.children) {
       graph.addNode(`child/${child.id}`, child);
-      graph.addDependency(`child/${child.id}`, `parent/${o.id}`);
+      graph.addDependency(`child/${child.id}`, `parent/${response.id}`);
     }
   })
   public async test(@Param("parentID", ParseIntPipe) parentID: number): Promise<Parent> {
@@ -57,9 +57,12 @@ export class BasicTestController {
 @Injectable()
 export class UseWithServiceService {
   constructor(private readonly cacheService: CacheDependencyService) {}
+
   public async getParent(parentID: number): Promise<Parent> {
     const cacheKey = `parent/${parentID}`;
+
     const cache = await this.cacheService.getCache<Parent>(cacheKey);
+
     if (cache) {
       return cache;
     }
@@ -68,28 +71,21 @@ export class UseWithServiceService {
       id: parentID,
       name: "parent",
       children: [
-        {
-          id: parentID + 1,
-          name: "child 1",
-        },
-        {
-          id: parentID + 2,
-          name: "child 2",
-        },
-        {
-          id: parentID + 3,
-          name: "child 3",
-        },
+        { id: parentID + 1, name: "child 1" },
+        { id: parentID + 2, name: "child 2" },
+        { id: parentID + 3, name: "child 3" },
       ],
     };
 
-    await this.cacheService.createCacheDependencies((graph: DepGraph<any>) => {
+    await this.cacheService.createCacheDependencies((graph: CacheDependencyGraph) => {
       graph.addNode(cacheKey, parent);
+
       for (const child of parent.children) {
         graph.addNode(`child/${child.id}`, child);
         graph.addDependency(`child/${child.id}`, `parent/${parent.id}`);
       }
     });
+
     return parent;
   }
 }
