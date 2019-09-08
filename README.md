@@ -12,7 +12,7 @@ nest-cache-dependency consider dependencies. Delete those that depend on the del
 ## Installation
 
 ```bash
-$ npm i --save nest-cache-dependency
+$ npm i --save @anchan828/nest-cache-dependency
 ```
 
 ## Quick Start
