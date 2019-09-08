@@ -33,6 +33,7 @@ export class AppModule {}
 @UseInterceptors(CacheDependencyInterceptor)
 export class ExampleController {
   constructor(private readonly service: ExampleService) {}
+
   @Get("users/:userId/items")
   @CacheKey("users/:userId/items")
   @CacheDependency<Item[]>((cacheKey: string, items: Item[], graph: CacheDependencyGraph) => {
@@ -41,17 +42,14 @@ export class ExampleController {
       graph.addDependency(`item/${item.id}`, cacheKey);
     }
   })
-  public async items(@Param("userID", ParseIntPipe) userID: number): Promise<Item[]> {
-    return this.service.getItems(userID);
+  public getItems(): Item[] {
+    return this.service.getItems();
   }
 
   @Delete("users/:userId/items/:itemId")
-  public async deleteItem(
-    @Param("userId", ParseIntPipe) userId: number,
-    @Param("itemId", ParseIntPipe) itemId: number,
-  ): Promise<void> {
-    await this.service.deleteItem(userId, itemId);
-    await this.cacheService.clearCacheDependencies(`item/${item.id}`);
+  @ClearCacheDependencies("item/:itemId")
+  public deleteItem(@Param("itemId", ParseIntPipe) itemId: number): void {
+    this.service.deleteItem(itemId);
   }
 }
 ```
@@ -62,9 +60,11 @@ export class ExampleController {
 @Injectable()
 export class ExampleService {
   constructor(private readonly cacheService: CacheDependencyService) {}
+
   private items: Item[] = Array(5)
     .fill(0)
     .map((_, index) => ({ id: index, name: `Item ${index}` }));
+
   public async getItems(userId: number): Promise<Item[]> {
     const cacheKey = `users/${userId}/items`;
 
