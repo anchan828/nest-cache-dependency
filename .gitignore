@@ -62,5 +62,5 @@ typings/
 .idea
 dist
 .idea
-packages/cache-dependency/.DS_Store
 .DS_Store
+packages/**/LICENSE
