@@ -25,7 +25,7 @@
   "bugs": {
     "url": "https://github.com/anchan828/nest-cache/issues"
   },
-  "homepage": "https://github.com/anchan828/nest-cache/tree/master/packages/terminus#readme",
+  "homepage": "https://github.com/anchan828/nest-cache#readme",
   "dependencies": {
     "cache-manager": "^2.10.0",
     "dependency-graph": "0.8.0",
