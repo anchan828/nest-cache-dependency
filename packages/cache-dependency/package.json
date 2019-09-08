@@ -1,6 +1,6 @@
 {
   "name": "@anchan828/nest-cache-dependency",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,9 +26,9 @@
   },
   "homepage": "https://github.com/anchan828/nest-cache/tree/master/packages/terminus#readme",
   "dependencies": {
-    "route-parser": "0.0.5",
+    "cache-manager": "^2.10.0",
     "dependency-graph": "0.8.0",
-    "cache-manager": "^2.10.0"
+    "route-parser": "0.0.5"
   },
   "devDependencies": {
     "@types/cache-manager": "1.2.8",
