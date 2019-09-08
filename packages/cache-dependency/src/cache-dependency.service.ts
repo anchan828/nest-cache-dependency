@@ -47,7 +47,7 @@ export class CacheDependencyService {
    */
   public async setCache(key: string, value: unknown): Promise<void> {
     if (!value) {
-      this.logger.debug(`value is undefined`);
+      this.logger.debug(`cache manager don't store 'value' because 'value' is undefined.`);
       return;
     }
 
@@ -58,7 +58,6 @@ export class CacheDependencyService {
           this.logger.error(err);
           reject(err);
         } else {
-          this.logger.debug(`Set cache key: ${key}`);
           resolve();
         }
       });
@@ -79,7 +78,6 @@ export class CacheDependencyService {
           this.logger.error(err);
           reject(err);
         } else {
-          this.logger.debug(`Deleted cache key: ${key}`);
           resolve();
         }
       });
