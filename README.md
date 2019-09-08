@@ -32,21 +32,26 @@ export class AppModule {}
 @Controller()
 @UseInterceptors(CacheDependencyInterceptor)
 export class ExampleController {
-  @Get("parents/:parentID")
-  @CacheKey("parent/:parentID")
-  @CacheDependency<Parent>((response: Parent, graph: CacheDependencyGraph) => {
-    for (const child of response.children) {
-      graph.addNode(`child/${child.id}`, child);
-      graph.addDependency(`child/${child.id}`, `parent/${response.id}`);
+  constructor(private readonly service: ExampleService) {}
+  @Get("users/:userId/items")
+  @CacheKey("users/:userId/items")
+  @CacheDependency<Item[]>((cacheKey: string, items: Item[], graph: CacheDependencyGraph) => {
+    for (const item of items) {
+      graph.addNode(`item/${item.id}`, item);
+      graph.addDependency(`item/${item.id}`, cacheKey);
     }
   })
-  public async test(@Param("parentID", ParseIntPipe) parentID: number): Promise<Parent> {
-    return this.service.getParent(parentID);
+  public async items(@Param("userID", ParseIntPipe) userID: number): Promise<Item[]> {
+    return this.service.getItems(userID);
   }
 
-  @Delete("children/:childID")
-  public async deleteChild(@Param("childID", ParseIntPipe) childID: number): Promise<void> {
-    await this.cacheService.clearCacheDependencies(`child/${childID}`);
+  @Delete("users/:userId/items/:itemId")
+  public async deleteItem(
+    @Param("userId", ParseIntPipe) userId: number,
+    @Param("itemId", ParseIntPipe) itemId: number,
+  ): Promise<void> {
+    await this.service.deleteItem(userId, itemId);
+    await this.cacheService.clearCacheDependencies(`item/${item.id}`);
   }
 }
 ```
@@ -57,36 +62,33 @@ export class ExampleController {
 @Injectable()
 export class ExampleService {
   constructor(private readonly cacheService: CacheDependencyService) {}
+  private items: Item[] = Array(5)
+    .fill(0)
+    .map((_, index) => ({ id: index, name: `Item ${index}` }));
+  public async getItems(userId: number): Promise<Item[]> {
+    const cacheKey = `users/${userId}/items`;
 
-  public async getParent(parentID: number): Promise<Parent> {
-    const cacheKey = `parent/${parentID}`;
-
-    const cache = await this.cacheService.getCache<Parent>(cacheKey);
+    const cache = await this.cacheService.getCache<Item[]>(cacheKey);
 
     if (cache) {
       return cache;
     }
 
-    const parent = {
-      id: parentID,
-      name: "parent",
-      children: [
-        { id: parentID + 1, name: "child 1" },
-        { id: parentID + 2, name: "child 2" },
-        { id: parentID + 3, name: "child 3" },
-      ],
-    };
-
     await this.cacheService.createCacheDependencies((graph: CacheDependencyGraph) => {
-      graph.addNode(cacheKey, parent);
+      graph.addNode(cacheKey, this.items);
 
-      for (const child of parent.children) {
-        graph.addNode(`child/${child.id}`, child);
-        graph.addDependency(`child/${child.id}`, `parent/${parent.id}`);
+      for (const item of this.items) {
+        graph.addNode(`item/${item.id}`, item);
+        graph.addDependency(`item/${item.id}`, cacheKey);
       }
     });
 
-    return parent;
+    return this.items;
+  }
+
+  public deleteItem(userId: number, itemId: number): void {
+    this.items = this.items.filter(item => item.id !== itemId);
+    this.cacheService.clearCacheDependencies(`item/${itemId}`);
   }
 }
 ```

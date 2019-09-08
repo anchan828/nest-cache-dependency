@@ -3,106 +3,51 @@ import { Test } from "@nestjs/testing";
 import { CacheDependencyGraph } from "../cache-dependency.interface";
 import { CacheDependencyModule } from "../cache-dependency.module";
 import { CacheDependencyService } from "../cache-dependency.service";
-
-interface Parent {
-  id: number;
-  name: string;
-  children: Child[];
-}
-
-interface Child {
-  id: number;
-  name: string;
-  grandchildren: GrandChild[];
-}
-
-interface GrandChild {
+import { CACHE_DEPENDENCY_PREFIX_CACHE_KEY } from "../constants";
+import { wait } from "../test.utils";
+interface Item {
   id: number;
   name: string;
 }
 
 @Injectable()
-export class UseWithServiceService {
+export class ExampleService {
   constructor(private readonly cacheService: CacheDependencyService) {}
 
-  public async getParentWithCache(parentID: number): Promise<Parent> {
-    return this.cacheService.getCache<Parent>(`parent/${parentID}`);
-  }
+  private items: Item[] = Array(5)
+    .fill(0)
+    .map((_, index) => ({ id: index, name: `Item ${index}` }));
 
-  public async getParent(parentID: number): Promise<Parent> {
-    const cacheKey = `parent/${parentID}`;
-    const cache = await this.cacheService.getCache<Parent>(cacheKey);
+  public async getItems(userId: number): Promise<Item[]> {
+    const cacheKey = `users/${userId}/items`;
+
+    const cache = await this.cacheService.getCache<Item[]>(cacheKey);
+
     if (cache) {
       return cache;
     }
 
-    const parent = {
-      id: parentID,
-      name: "parent",
-      children: [
-        {
-          id: parentID + 1,
-          name: "child 1",
-          grandchildren: [
-            {
-              id: parentID + 100,
-              name: "grandchild 1",
-            },
-          ],
-        },
-        {
-          id: parentID + 2,
-          name: "child 2",
-          grandchildren: [
-            {
-              id: parentID + 200,
-              name: "grandchild 2",
-            },
-          ],
-        },
-        {
-          id: parentID + 3,
-          name: "child 3",
-          grandchildren: [
-            {
-              id: parentID + 300,
-              name: "grandchild 3",
-            },
-          ],
-        },
-      ],
-    };
-
     await this.cacheService.createCacheDependencies((graph: CacheDependencyGraph) => {
-      graph.addNode(cacheKey, parent);
-      for (const child of parent.children) {
-        graph.addNode(`child/${child.id}`, child);
-        graph.addDependency(`child/${child.id}`, `parent/${parent.id}`);
-        for (const grandchild of child.grandchildren) {
-          graph.addNode(`grandchild/${grandchild.id}`, grandchild);
-          graph.addDependency(`grandchild/${grandchild.id}`, `child/${child.id}`);
-        }
+      graph.addNode(cacheKey, this.items);
+
+      for (const item of this.items) {
+        graph.addNode(`item/${item.id}`, item);
+        graph.addDependency(`item/${item.id}`, cacheKey);
       }
     });
-    return parent;
+
+    return this.items;
   }
 
-  public async deleteChild(childID: number): Promise<void> {
-    await this.cacheService.clearCacheDependencies(`child/${childID}`);
-  }
-
-  public async deleteGrandChild(grandchildID: number): Promise<void> {
-    await this.cacheService.clearCacheDependencies(`grandchild/${grandchildID}`);
+  public deleteItem(userId: number, itemId: number): void {
+    this.items = this.items.filter(item => item.id !== itemId);
+    this.cacheService.clearCacheDependencies(`item/${itemId}`);
   }
 }
 
 @Module({
-  imports: [
-    CacheDependencyModule.register({
-      ttl: 30,
-    }),
-  ],
-  providers: [UseWithServiceService],
+  imports: [CacheDependencyModule.register()],
+  providers: [ExampleService],
 })
 export class UseWithServiceModule {}
 
@@ -112,25 +57,46 @@ describe("2. Use with Service", () => {
       imports: [UseWithServiceModule],
     }).compile();
 
-    const service = app.get<UseWithServiceService>(UseWithServiceService);
-    const parentID = Date.now();
-    const result = {
-      id: parentID,
-      name: "parent",
-      children: [
-        { id: parentID + 1, name: "child 1", grandchildren: [{ id: parentID + 100, name: "grandchild 1" }] },
-        { id: parentID + 2, name: "child 2", grandchildren: [{ id: parentID + 200, name: "grandchild 2" }] },
-        { id: parentID + 3, name: "child 3", grandchildren: [{ id: parentID + 300, name: "grandchild 3" }] },
-      ],
-    };
-    await expect(service.getParentWithCache(parentID)).resolves.toBeUndefined();
-    await expect(service.getParent(parentID)).resolves.toEqual(result);
-    await expect(service.getParentWithCache(parentID)).resolves.toEqual(result);
-    await service.deleteChild(parentID + 3);
-    await expect(service.getParentWithCache(parentID)).resolves.toBeUndefined();
+    const service = app.get<ExampleService>(ExampleService);
+    const cacheService = app.get<CacheDependencyService>(CacheDependencyService);
+    const userId = Date.now();
 
-    await expect(service.getParent(parentID)).resolves.toEqual(result);
-    await service.deleteGrandChild(parentID + 200);
-    await expect(service.getParentWithCache(parentID)).resolves.toBeUndefined();
+    await expect(service.getItems(userId)).resolves.toStrictEqual([
+      { id: 0, name: "Item 0" },
+      { id: 1, name: "Item 1" },
+      { id: 2, name: "Item 2" },
+      { id: 3, name: "Item 3" },
+      { id: 4, name: "Item 4" },
+    ]);
+
+    await wait(1);
+    await expect(cacheService.getAllCacheKeys()).resolves.toEqual([
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/4`,
+      "item/4",
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/3`,
+      "item/3",
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/2`,
+      "item/2",
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/1`,
+      "item/1",
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/0`,
+      "item/0",
+      `cache-dependency:users/${userId}/items`,
+      `users/${userId}/items`,
+    ]);
+
+    await service.deleteItem(userId, 2);
+    await wait(1);
+    await expect(cacheService.getAllCacheKeys()).resolves.toEqual([
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/4`,
+      "item/4",
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/3`,
+      "item/3",
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/1`,
+      "item/1",
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/0`,
+      "item/0",
+      `cache-dependency:users/${userId}/items`,
+    ]);
   });
 });

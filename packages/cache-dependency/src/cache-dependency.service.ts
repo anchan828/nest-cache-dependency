@@ -1,7 +1,6 @@
 import { CACHE_MANAGER, Inject, Injectable, Logger } from "@nestjs/common";
-import { Cache } from "cache-manager";
 import { DepGraph } from "dependency-graph";
-import { CacheDependencyGraph, CreateCacheDependencyFunction } from "./cache-dependency.interface";
+import { CacheDependencyGraph, CacheManager, CreateCacheDependencyFunction } from "./cache-dependency.interface";
 import { createDependenciesCacheKey } from "./cache-dependency.utils";
 import { CACHE_DEPENDENCY_MODULE } from "./constants";
 
@@ -15,7 +14,25 @@ import { CACHE_DEPENDENCY_MODULE } from "./constants";
 export class CacheDependencyService {
   private readonly logger = new Logger(CACHE_DEPENDENCY_MODULE, true);
 
-  constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
+  constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: CacheManager) {}
+
+  /**
+   * Get all keys
+   *
+   * @returns {Promise<string[]>}
+   * @memberof CacheDependencyService
+   */
+  public getAllCacheKeys(): Promise<string[]> {
+    return new Promise((resolve, reject): void => {
+      this.cacheManager.keys((err: Error, keys: string[]) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(keys);
+        }
+      });
+    });
+  }
 
   /**
    * Get cache from store

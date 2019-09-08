@@ -7,38 +7,47 @@ import { Observable, of } from "rxjs";
 import { tap } from "rxjs/operators";
 import { CacheDependencyFunction } from "./cache-dependency.interface";
 import { CacheDependencyService } from "./cache-dependency.service";
-import { CACHE_DEPENDENCY_KEY_METADATA } from "./constants";
+import { CACHE_DEPENDENCY_KEY_METADATA, CLEAR_CACHE_DEPENDENCIES_KEY_MATADATA } from "./constants";
 @Injectable()
 export class CacheDependencyInterceptor implements NestInterceptor {
   constructor(private service: CacheDependencyService, private readonly reflector: Reflector) {}
 
+  private applyCacheKeyParams(cacheKey: string, params: object = {}): string {
+    const route = new Route(cacheKey.replace(/::/g, "__cache_key_encoded__:")).reverse(params);
+    if (route) {
+      return route.replace(/__cache_key_encoded__/g, ":");
+    }
+    return cacheKey;
+  }
+
   public async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+    const params = context.switchToHttp().getRequest().params;
     let cacheKey = this.reflector.get(CACHE_KEY_METADATA, context.getHandler()) as string;
+
     if (cacheKey) {
-      const params = context.switchToHttp().getRequest().params;
-      const route = new Route(cacheKey.replace(/::/g, "__cache_key_encoded__:")).reverse(params);
-      if (route) {
-        cacheKey = route.replace(/__cache_key_encoded__/g, ":");
-        const value = await this.service.getCache(cacheKey);
-        if (value) {
-          return of(value);
-        }
+      cacheKey = this.applyCacheKeyParams(cacheKey, params);
+      const value = await this.service.getCache(cacheKey);
+      if (value) {
+        return of(value);
       }
     }
 
     const func: CacheDependencyFunction<any> = this.reflector.get(CACHE_DEPENDENCY_KEY_METADATA, context.getHandler());
-    if (!func) {
-      return next.handle();
-    }
-
+    let clearCacheKey: string = this.reflector.get(CLEAR_CACHE_DEPENDENCIES_KEY_MATADATA, context.getHandler());
     return next.handle().pipe(
       tap(async response => {
-        const graph = new DepGraph<any>({ circular: true });
-        if (cacheKey) {
-          graph.addNode(cacheKey, response);
+        if (func) {
+          const graph = new DepGraph<any>({ circular: true });
+          if (cacheKey) {
+            graph.addNode(cacheKey, response);
+          }
+          func(cacheKey, response, graph);
+          await this.service.createCacheDependencies(graph);
         }
-        func(response, graph);
-        await this.service.createCacheDependencies(graph);
+        if (clearCacheKey) {
+          clearCacheKey = this.applyCacheKeyParams(clearCacheKey, params);
+          await this.service.clearCacheDependencies(clearCacheKey);
+        }
       }),
     );
   }
