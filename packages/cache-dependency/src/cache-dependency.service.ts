@@ -1,8 +1,9 @@
-import { CACHE_MANAGER, Inject, Injectable } from "@nestjs/common";
+import { CACHE_MANAGER, Inject, Injectable, Logger } from "@nestjs/common";
 import { Cache } from "cache-manager";
 import { DepGraph } from "dependency-graph";
 import { CacheDependencyGraph, CreateCacheDependencyFunction } from "./cache-dependency.interface";
 import { createDependenciesCacheKey } from "./cache-dependency.utils";
+import { CACHE_DEPENDENCY_MODULE } from "./constants";
 
 /**
  * Access to cache manager and dependency
@@ -12,6 +13,8 @@ import { createDependenciesCacheKey } from "./cache-dependency.utils";
  */
 @Injectable()
 export class CacheDependencyService {
+  private readonly logger = new Logger(CACHE_DEPENDENCY_MODULE, true);
+
   constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
 
   /**
@@ -43,12 +46,19 @@ export class CacheDependencyService {
    * @memberof CacheDependencyService
    */
   public async setCache(key: string, value: unknown): Promise<void> {
+    if (!value) {
+      this.logger.debug(`value is undefined`);
+      return;
+    }
+
     return new Promise((resolve, reject): void => {
       const ttl = 999999;
       this.cacheManager.set(key, value, { ttl }, (err): void => {
         if (err) {
+          this.logger.error(err);
           reject(err);
         } else {
+          this.logger.debug(`Set cache key: ${key}`);
           resolve();
         }
       });
@@ -66,8 +76,10 @@ export class CacheDependencyService {
     return new Promise((resolve, reject): void => {
       this.cacheManager.del(key, (err): void => {
         if (err) {
+          this.logger.error(err);
           reject(err);
         } else {
+          this.logger.debug(`Deleted cache key: ${key}`);
           resolve();
         }
       });
