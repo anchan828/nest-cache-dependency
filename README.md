@@ -97,6 +97,8 @@ export class ExampleService {
 
 `@CacheKey` supports [route-parser](https://www.npmjs.com/package/route-parser). You can use `:name` pattern as cache key
 
+`CacheDependencyGraph` uses [dependency-graph](https://www.npmjs.com/package/dependency-graph)
+
 ## License
 
 [MIT](LICENSE)
