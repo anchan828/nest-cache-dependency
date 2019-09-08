@@ -3,12 +3,25 @@ import { Cache } from "cache-manager";
 import { DepGraph } from "dependency-graph";
 import { CacheDependencyGraph, CreateCacheDependencyFunction } from "./cache-dependency.interface";
 import { createDependenciesCacheKey } from "./cache-dependency.utils";
-import { CACHE_DEPENDENCY_PREFIX_CACHE_KEY } from "./constants";
 
+/**
+ * Access to cache manager and dependency
+ *
+ * @export
+ * @class CacheDependencyService
+ */
 @Injectable()
 export class CacheDependencyService {
   constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: Cache) {}
 
+  /**
+   * Get cache from store
+   *
+   * @template T
+   * @param {string} key
+   * @returns {Promise<T>}
+   * @memberof CacheDependencyService
+   */
   public async getCache<T>(key: string): Promise<T> {
     return new Promise((resolve, reject): void => {
       this.cacheManager.get<T>(key, (err, result): void => {
@@ -21,9 +34,16 @@ export class CacheDependencyService {
     });
   }
 
+  /**
+   * Set cache to store. ttl is 999999 for now.
+   *
+   * @param {string} key
+   * @param {unknown} value
+   * @returns {Promise<void>}
+   * @memberof CacheDependencyService
+   */
   public async setCache(key: string, value: unknown): Promise<void> {
     return new Promise((resolve, reject): void => {
-      console.log(this.cacheManager);
       const ttl = 999999;
       this.cacheManager.set(key, value, { ttl }, (err): void => {
         if (err) {
@@ -35,6 +55,13 @@ export class CacheDependencyService {
     });
   }
 
+  /**
+   * Delete cache from store
+   *
+   * @param {string} key
+   * @returns {Promise<void>}
+   * @memberof CacheDependencyService
+   */
   public deleteCache(key: string): Promise<void> {
     return new Promise((resolve, reject): void => {
       this.cacheManager.del(key, (err): void => {
@@ -47,6 +74,14 @@ export class CacheDependencyService {
     });
   }
 
+  /**
+   * Create dependency graph.
+   * If node has data, save it.
+   *
+   * @param {(CacheDependencyGraph | CreateCacheDependencyFunction)} graph
+   * @returns {Promise<void>}
+   * @memberof CacheDependencyService
+   */
   public async createCacheDependencies(graph: CacheDependencyGraph | CreateCacheDependencyFunction): Promise<void> {
     if (typeof graph === "function") {
       const g = new DepGraph<any>({ circular: true });
@@ -63,7 +98,7 @@ export class CacheDependencyService {
       }
 
       const dependencies = graph.dependenciesOf(key);
-      const dependenciesCacheKey = `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}${key}`;
+      const dependenciesCacheKey = createDependenciesCacheKey(key);
       let value = (await this.getCache<string[]>(dependenciesCacheKey)) as string[];
       if (!Array.isArray(value)) {
         value = [];
@@ -75,8 +110,16 @@ export class CacheDependencyService {
     }
   }
 
+  /**
+   * Clear cache dependency.
+   * If key have cache, delete it.
+   * If dependency keys have cache, delete them.
+   * @param {string} key
+   * @returns {Promise<void>}
+   * @memberof CacheDependencyService
+   */
   public async clearCacheDependencies(key: string): Promise<void> {
-    const dependenciesCacheKey = `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}${key}`;
+    const dependenciesCacheKey = createDependenciesCacheKey(key);
     const values = (await this.cacheManager.get<string[]>(dependenciesCacheKey)) as string[];
 
     if (!Array.isArray(values)) {

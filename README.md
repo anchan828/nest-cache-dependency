@@ -91,6 +91,10 @@ export class ExampleService {
 }
 ```
 
+## Notes
+
+`@CacheKey` supports [route-parser](https://www.npmjs.com/package/route-parser). You can use `:name` pattern as cache key
+
 ## License
 
 [MIT](LICENSE)

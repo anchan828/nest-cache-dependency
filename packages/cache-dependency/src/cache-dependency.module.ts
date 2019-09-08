@@ -2,8 +2,22 @@ import { CacheModule, CacheModuleAsyncOptions, CacheModuleOptions, DynamicModule
 import { CacheDependencyInterceptor } from "./cache-dependency.interceptor";
 import { CacheDependencyService } from "./cache-dependency.service";
 
+/**
+ * Module that provides cache dependency.
+ * This module wraps the official CacheModule.
+ * @export
+ * @class CacheDependencyModule
+ */
 @Module({})
 export class CacheDependencyModule {
+  /**
+   * Configure the cache dependency statically.
+   *
+   * @static
+   * @param {CacheModuleOptions} [options={}]
+   * @returns {DynamicModule}
+   * @memberof CacheDependencyModule
+   */
   public static register(options: CacheModuleOptions = {}): DynamicModule {
     return {
       module: CacheDependencyModule,
@@ -13,6 +27,14 @@ export class CacheDependencyModule {
     };
   }
 
+  /**
+   * Configure the cache dependency dynamically.
+   *
+   * @static
+   * @param {CacheModuleAsyncOptions} options
+   * @returns {DynamicModule}
+   * @memberof CacheDependencyModule
+   */
   public static registerAsync(options: CacheModuleAsyncOptions): DynamicModule {
     return {
       module: CacheDependencyModule,
