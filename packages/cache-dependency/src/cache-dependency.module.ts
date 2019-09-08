@@ -1,4 +1,11 @@
-import { CacheModule, CacheModuleAsyncOptions, CacheModuleOptions, DynamicModule, Module } from "@nestjs/common";
+import {
+  CacheModule,
+  CacheModuleAsyncOptions,
+  CacheModuleOptions,
+  DynamicModule,
+  Global,
+  Module,
+} from "@nestjs/common";
 import { CacheDependencyInterceptor } from "./cache-dependency.interceptor";
 import { CacheDependencyService } from "./cache-dependency.service";
 
@@ -8,6 +15,7 @@ import { CacheDependencyService } from "./cache-dependency.service";
  * @export
  * @class CacheDependencyModule
  */
+@Global()
 @Module({})
 export class CacheDependencyModule {
   /**
