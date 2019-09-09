@@ -2,7 +2,7 @@ import { CacheStore, CACHE_MANAGER, Inject, Injectable, Logger } from "@nestjs/c
 import { DepGraph } from "dependency-graph";
 import { CacheDependencyGraph, CreateCacheDependencyFunction } from "./cache-dependency.interface";
 import { createDependenciesCacheKey } from "./cache-dependency.utils";
-import { CACHE_DEPENDENCY_MODULE } from "./constants";
+import { CACHE_DEPENDENCY_MODULE, CACHE_PREFIX_KEY } from "./constants";
 
 /**
  * Access to cache manager and dependency
@@ -28,7 +28,7 @@ export class CacheDependencyService {
    * @memberof CacheDependencyService
    */
   public async getCache<T>(key: string): Promise<T | undefined> {
-    return this.cacheManager.get<T>(key);
+    return this.cacheManager.get<T>(`${CACHE_PREFIX_KEY}${key}`);
   }
 
   /**
@@ -44,7 +44,7 @@ export class CacheDependencyService {
       this.logger.debug(`cache manager don't store 'value' because 'value' is undefined.`);
       return;
     }
-    await this.cacheManager.set(key, value);
+    await this.cacheManager.set(`${CACHE_PREFIX_KEY}${key}`, value);
   }
 
   /**
@@ -55,7 +55,7 @@ export class CacheDependencyService {
    * @memberof CacheDependencyService
    */
   public async deleteCache(key: string): Promise<void> {
-    await this.cacheManager.del(key);
+    await this.cacheManager.del(`${CACHE_PREFIX_KEY}${key}`);
   }
 
   /**
@@ -106,7 +106,7 @@ export class CacheDependencyService {
   public async clearCacheDependencies(key: string): Promise<void> {
     const dependenciesCacheKey = createDependenciesCacheKey(key);
 
-    const values = (await this.cacheManager.get<string[]>(dependenciesCacheKey)) as string[];
+    const values = (await this.getCache<string[]>(dependenciesCacheKey)) as string[];
 
     if (Array.isArray(values)) {
       for (const value of values) {
