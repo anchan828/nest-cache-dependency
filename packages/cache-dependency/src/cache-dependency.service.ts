@@ -77,7 +77,7 @@ export class CacheDependencyService {
     for (const key of keys) {
       const data = graph.getNodeData(key);
 
-      if (data) {
+      if (data && data !== key) {
         await this.setCache(key, data);
       }
 
