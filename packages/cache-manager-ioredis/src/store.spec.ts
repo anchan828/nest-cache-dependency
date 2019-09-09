@@ -1,49 +1,100 @@
+import { CacheManager } from "@anchan828/nest-cache-common";
 import { caching } from "cache-manager";
 import { redisStore } from "./store";
 describe("RedisStore", () => {
-  it("create cache instance", () => {
-    expect(
-      caching({
-        store: redisStore,
-        host: process.env.REDIS_HOST || "localhost",
-      } as any),
-    ).toBeDefined();
-  });
+  let store: CacheManager;
 
-  it("should manage cache", async () => {
-    const cache = caching({
+  beforeEach(async () => {
+    store = (caching({
       store: redisStore,
       host: process.env.REDIS_HOST || "localhost",
-      db: 10,
-    } as any);
+      ttl: 10,
+    } as any) as any) as CacheManager;
+  });
 
+  afterEach(async () => {
+    // await (store as any).store.redisCache.flushdb();
+  });
+
+  it("create cache instance", () => {
+    expect(store).toBeDefined();
+  });
+
+  it("should set cache", async () => {
     const key = "test";
-    const date = new Date();
-    await cache.set(
-      key,
-      {
-        id: 1,
-        name: "Name",
-        date,
-        nest: {
-          id: 10,
-          date,
-        },
-      },
-      100,
-    );
-
-    await expect(cache.get(key)).resolves.toEqual({
+    await store.set(key, {
       id: 1,
       name: "Name",
-      date,
       nest: {
         id: 10,
-        date,
       },
     });
 
-    await expect(cache.del(key)).resolves.toBeUndefined();
-    await expect(cache.get(key)).resolves.toBeUndefined();
+    await expect(store.get(key)).resolves.toEqual({
+      id: 1,
+      name: "Name",
+      nest: {
+        id: 10,
+      },
+    });
+  });
+
+  it("should delete cache", async () => {
+    const key = "test";
+    await store.set(key, key);
+    await expect(store.del(key)).resolves.toBeUndefined();
+    await expect(store.get(key)).resolves.toBeUndefined();
+  });
+
+  it("should get cache keys", async () => {
+    const keys = ["key1", "key2", "key3"];
+    for (const key of keys) {
+      await store.set(key, key);
+    }
+
+    const results = await store.keys();
+
+    await expect(results.sort()).toEqual(["cache:key1", "cache:key2", "cache:key3"]);
+  });
+
+  it("should reset cache keys", async () => {
+    const keys = ["key1", "key2", "key3"];
+    for (const key of keys) {
+      await store.set(key, key);
+    }
+    let results = await store.keys();
+    await expect(results.sort()).toEqual(["cache:key1", "cache:key2", "cache:key3"]);
+    await store.reset();
+    results = await store.keys();
+    await expect(results.sort()).toEqual([]);
+  });
+
+  it("should change key prefix", async () => {
+    store = (caching({
+      store: redisStore,
+      host: process.env.REDIS_HOST || "localhost",
+      ttl: 10,
+      db: 2,
+      keyPrefix: "changed:",
+    } as any) as any) as CacheManager;
+    const key = "key";
+    await store.set(key, key);
+    const results = await store.keys();
+    await expect(results.sort()).toEqual(["changed:key"]);
+  });
+
+  it("should mget", async () => {
+    const keys = ["key1", "key2", "key3"];
+    for (const key of keys) {
+      await store.set(key, `${key}:value`);
+    }
+
+    await expect(store.mget(keys)).resolves.toEqual(["key1:value", "key2:value", "key3:value"]);
+  });
+
+  it("should mset", async () => {
+    await store.mset("key1", "key1:value", "key2", "key2:value", "key3", "key3:value");
+
+    await expect(store.mget(["key1", "key2", "key3"])).resolves.toEqual(["key1:value", "key2:value", "key3:value"]);
   });
 });
