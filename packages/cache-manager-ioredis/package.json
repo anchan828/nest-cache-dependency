@@ -1,0 +1,35 @@
+{
+  "name": "@anchan828/cache-manager-ioredis",
+  "version": "0.0.5",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prepublishOnly": "rm -rf dist && npm run build && rm -f dist/*.tsbuildinfo && npm run copy:license",
+    "copy:license": "cp ../../LICENSE ./",
+    "build": "node ../../node_modules/typescript/bin/tsc -p tsconfig.build.json",
+    "lint": "node ../../node_modules/eslint/bin/eslint --ignore-path ../../.eslintignore '**/*.ts'",
+    "lint:fix": "npm run lint -- --fix",
+    "watch": "node ../../node_modules/typescript/bin/tsc --watch",
+    "test": "node ../../node_modules/jest/bin/jest --coverage --runInBand --detectOpenHandles --forceExit",
+    "test:debug": "node --inspect-brk ../../node_modules/jest/bin/jest --runInBand --logHeapUsage",
+    "test:watch": "npm run test -- --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anchan828/nest-cache.git"
+  },
+  "author": "anchan828 <anchan828@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/anchan828/nest-cache/issues"
+  },
+  "homepage": "https://github.com/anchan828/nest-cache#readme",
+  "dependencies": {
+    "ioredis": "4.14.0"
+  },
+  "devDependencies": {
+    "cache-manager": "2.10.0",
+    "@types/cache-manager": "1.2.8"
+  }
+}
