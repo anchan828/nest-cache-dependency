@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/anchan828/nest-cache#readme",
   "dependencies": {
-    "cache-manager": "^2.10.0",
+    "cache-manager": "2.10.0",
     "dependency-graph": "0.8.0",
     "route-parser": "0.0.5"
   },
