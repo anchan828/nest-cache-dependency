@@ -1,6 +1,6 @@
-import { Cache, caching } from "cache-manager";
+import { caching } from "cache-manager";
 import { redisStore } from "./store";
-describe("IORedisStore", () => {
+describe("RedisStore", () => {
   it("create cache instance", () => {
     expect(
       caching({
@@ -15,7 +15,7 @@ describe("IORedisStore", () => {
       store: redisStore,
       host: process.env.REDIS_HOST || "localhost",
       db: 10,
-    } as any) as Cache & { keys: () => Promise<string[]> };
+    } as any);
 
     const key = "test";
     const date = new Date();
@@ -43,10 +43,7 @@ describe("IORedisStore", () => {
       },
     });
 
-    await expect(cache.keys()).resolves.toEqual(["test"]);
-
     await expect(cache.del(key)).resolves.toBeUndefined();
-
-    await expect(cache.keys()).resolves.toEqual([]);
+    await expect(cache.get(key)).resolves.toBeUndefined();
   });
 });

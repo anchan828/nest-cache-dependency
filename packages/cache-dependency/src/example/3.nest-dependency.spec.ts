@@ -64,7 +64,7 @@ export class ExampleService {
 })
 export class UseWithServiceModule {}
 
-describe("2. Use with Service", () => {
+describe("3. Nest dependency", () => {
   it("test", async () => {
     const app = await Test.createTestingModule({
       imports: [UseWithServiceModule],
@@ -148,72 +148,24 @@ describe("2. Use with Service", () => {
     ]);
 
     await wait(1);
-    await expect(cacheService.getAllCacheKeys()).resolves.toEqual([
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/4/nestItem/1`,
-      "item/4/nestItem/1",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/4/nestItem/0`,
-      "item/4/nestItem/0",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/4`,
-      "item/4",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/3/nestItem/1`,
-      "item/3/nestItem/1",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/3/nestItem/0`,
-      "item/3/nestItem/0",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/3`,
-      "item/3",
+
+    const keys = [
       `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/2/nestItem/1`,
       "item/2/nestItem/1",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/2/nestItem/0`,
-      "item/2/nestItem/0",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/2`,
       "item/2",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/1/nestItem/1`,
-      "item/1/nestItem/1",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/1/nestItem/0`,
-      "item/1/nestItem/0",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/1`,
-      "item/1",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/0/nestItem/1`,
-      "item/0/nestItem/1",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/0/nestItem/0`,
-      "item/0/nestItem/0",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/0`,
-      "item/0",
-      `cache-dependency:users/${userId}/items`,
       `users/${userId}/items`,
-    ]);
+    ];
+
+    for (const key of keys) {
+      await expect(cacheService.getCache(key)).resolves.toBeDefined();
+    }
 
     await service.deleteNestItem(userId, 2, 1);
-    await wait(1);
-    await expect(cacheService.getAllCacheKeys()).resolves.toEqual([
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/4/nestItem/1`,
-      "item/4/nestItem/1",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/4/nestItem/0`,
-      "item/4/nestItem/0",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/4`,
-      "item/4",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/3/nestItem/1`,
-      "item/3/nestItem/1",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/3/nestItem/0`,
-      "item/3/nestItem/0",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/3`,
-      "item/3",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/2/nestItem/0`,
-      "item/2/nestItem/0",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/2`,
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/1/nestItem/1`,
-      "item/1/nestItem/1",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/1/nestItem/0`,
-      "item/1/nestItem/0",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/1`,
-      "item/1",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/0/nestItem/1`,
-      "item/0/nestItem/1",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/0/nestItem/0`,
-      "item/0/nestItem/0",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/0`,
-      "item/0",
-      `cache-dependency:users/${userId}/items`,
-    ]);
+
+    await wait(500);
+
+    for (const key of keys) {
+      await expect(cacheService.getCache(key)).resolves.toBeUndefined();
+    }
   });
 });

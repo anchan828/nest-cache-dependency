@@ -1,7 +1,7 @@
-# @anchan828/cache-manager-ioredis
+# @anchan828/nest-cache-manager-ioredis
 
-![npm](https://img.shields.io/npm/v/@anchan828/cache-manager-ioredis.svg)
-![NPM](https://img.shields.io/npm/l/@anchan828/cache-manager-ioredis.svg)
+![npm](https://img.shields.io/npm/v/@anchan828/nest-cache-manager-ioredis.svg)
+![NPM](https://img.shields.io/npm/l/@anchan828/nest-cache-manager-ioredis.svg)
 
 ## Description
 
@@ -10,13 +10,13 @@ Redis store for node-cache-manager using IORedis.
 ## Installation
 
 ```bash
-$ npm i --save @anchan828/cache-manager-ioredis
+$ npm i --save @anchan828/nest-cache-manager-ioredis
 ```
 
 ## Quick Start
 
 ```ts
-import { redisStore } from "@anchan828/cache-manager-ioredis";
+import { redisStore } from "@anchan828/nest-cache-manager-ioredis";
 import { caching } from "cache-manager";
 
 caching({

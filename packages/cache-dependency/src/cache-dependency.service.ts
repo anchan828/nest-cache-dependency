@@ -1,6 +1,6 @@
-import { CACHE_MANAGER, Inject, Injectable, Logger } from "@nestjs/common";
+import { CacheStore, CACHE_MANAGER, Inject, Injectable, Logger } from "@nestjs/common";
 import { DepGraph } from "dependency-graph";
-import { CacheDependencyGraph, CacheManager, CreateCacheDependencyFunction } from "./cache-dependency.interface";
+import { CacheDependencyGraph, CreateCacheDependencyFunction } from "./cache-dependency.interface";
 import { createDependenciesCacheKey } from "./cache-dependency.utils";
 import { CACHE_DEPENDENCY_MODULE } from "./constants";
 
@@ -14,25 +14,10 @@ import { CACHE_DEPENDENCY_MODULE } from "./constants";
 export class CacheDependencyService {
   private readonly logger = new Logger(CACHE_DEPENDENCY_MODULE, true);
 
-  constructor(@Inject(CACHE_MANAGER) private readonly cacheManager: CacheManager) {}
-
-  /**
-   * Get all keys
-   *
-   * @returns {Promise<string[]>}
-   * @memberof CacheDependencyService
-   */
-  public getAllCacheKeys(): Promise<string[]> {
-    return new Promise((resolve, reject): void => {
-      this.cacheManager.keys((err: Error, keys: string[]) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(keys);
-        }
-      });
-    });
-  }
+  constructor(
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Omit<CacheStore, "get"> & { get<T>(key: string): Promise<T | undefined> },
+  ) {}
 
   /**
    * Get cache from store
@@ -42,16 +27,8 @@ export class CacheDependencyService {
    * @returns {Promise<T>}
    * @memberof CacheDependencyService
    */
-  public async getCache<T>(key: string): Promise<T> {
-    return new Promise((resolve, reject): void => {
-      this.cacheManager.get<T>(key, (err, result): void => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(result);
-        }
-      });
-    });
+  public async getCache<T>(key: string): Promise<T | undefined> {
+    return this.cacheManager.get<T>(key);
   }
 
   /**
@@ -67,18 +44,7 @@ export class CacheDependencyService {
       this.logger.debug(`cache manager don't store 'value' because 'value' is undefined.`);
       return;
     }
-
-    return new Promise((resolve, reject): void => {
-      const ttl = 999999;
-      this.cacheManager.set(key, value, { ttl }, (err): void => {
-        if (err) {
-          this.logger.error(err);
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
+    await this.cacheManager.set(key, value);
   }
 
   /**
@@ -88,17 +54,8 @@ export class CacheDependencyService {
    * @returns {Promise<void>}
    * @memberof CacheDependencyService
    */
-  public deleteCache(key: string): Promise<void> {
-    return new Promise((resolve, reject): void => {
-      this.cacheManager.del(key, (err): void => {
-        if (err) {
-          this.logger.error(err);
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-    });
+  public async deleteCache(key: string): Promise<void> {
+    await this.cacheManager.del(key);
   }
 
   /**
@@ -147,15 +104,13 @@ export class CacheDependencyService {
    */
   public async clearCacheDependencies(key: string): Promise<void> {
     const dependenciesCacheKey = createDependenciesCacheKey(key);
+
     const values = (await this.cacheManager.get<string[]>(dependenciesCacheKey)) as string[];
 
-    if (!Array.isArray(values)) {
-      return;
-    }
-
-    for (const value of values) {
-      await this.deleteCache(value);
-      await this.deleteCache(createDependenciesCacheKey(key));
+    if (Array.isArray(values)) {
+      for (const value of values) {
+        await this.clearCacheDependencies(value);
+      }
     }
 
     await this.deleteCache(key);

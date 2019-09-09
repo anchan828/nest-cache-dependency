@@ -1,5 +1,5 @@
 {
-  "name": "@anchan828/cache-manager-ioredis",
+  "name": "@anchan828/nest-cache-manager-ioredis",
   "version": "0.0.5",
   "description": "",
   "main": "dist/index.js",
@@ -29,7 +29,8 @@
     "ioredis": "4.14.0"
   },
   "devDependencies": {
-    "cache-manager": "2.10.0",
-    "@types/cache-manager": "1.2.8"
+    "@types/cache-manager": "1.2.8",
+    "@types/ioredis": "^4.0.17",
+    "cache-manager": "2.10.0"
   }
 }

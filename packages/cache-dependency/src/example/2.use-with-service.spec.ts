@@ -70,33 +70,18 @@ describe("2. Use with Service", () => {
     ]);
 
     await wait(1);
-    await expect(cacheService.getAllCacheKeys()).resolves.toEqual([
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/4`,
-      "item/4",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/3`,
-      "item/3",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/2`,
-      "item/2",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/1`,
-      "item/1",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/0`,
-      "item/0",
-      `cache-dependency:users/${userId}/items`,
-      `users/${userId}/items`,
-    ]);
+
+    const keys = [`${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/2`, "item/2", `users/${userId}/items`];
+    for (const key of keys) {
+      await expect(cacheService.getCache(key)).resolves.toBeDefined();
+    }
 
     await service.deleteItem(userId, 2);
-    await wait(1);
-    await expect(cacheService.getAllCacheKeys()).resolves.toEqual([
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/4`,
-      "item/4",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/3`,
-      "item/3",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/1`,
-      "item/1",
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/0`,
-      "item/0",
-      `cache-dependency:users/${userId}/items`,
-    ]);
+
+    await wait(500);
+
+    for (const key of keys) {
+      await expect(cacheService.getCache(key)).resolves.toBeUndefined();
+    }
   });
 });
