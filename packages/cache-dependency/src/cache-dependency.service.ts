@@ -88,9 +88,10 @@ export class CacheDependencyService {
         value = [];
       }
 
-      value.push(...dependencies);
-
-      await this.setCache(dependenciesCacheKey, Array.from(new Set(value)));
+      const newValues = Array.from(new Set([...value, ...dependencies]));
+      if (newValues.length !== 0 && !this.arrayEquals(value, newValues)) {
+        await this.setCache(dependenciesCacheKey, newValues);
+      }
     }
   }
 
@@ -115,5 +116,12 @@ export class CacheDependencyService {
 
     await this.deleteCache(key);
     await this.deleteCache(dependenciesCacheKey);
+  }
+
+  /**
+   * Is it the same array?
+   */
+  private arrayEquals<T>(a: T[], b: T[]): boolean {
+    return JSON.stringify(a.sort()) === JSON.stringify(b.sort());
   }
 }
