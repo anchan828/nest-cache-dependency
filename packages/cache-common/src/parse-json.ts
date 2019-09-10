@@ -1,3 +1,8 @@
+/**
+ * parse json string to javascript object.
+ * JSON.parse has receiver for Date.parse.
+ * @param json
+ */
 export const parseJSON = <T>(json?: string): T | undefined => {
   if (!json) {
     return;

@@ -1,103 +1,21 @@
-# @anchan828/nest-cache-dependency
+# @anchan828/nest-cache-common
 
-![npm](https://img.shields.io/npm/v/@anchan828/nest-cache-dependency.svg)
-![NPM](https://img.shields.io/npm/l/@anchan828/nest-cache-dependency.svg)
+![npm](https://img.shields.io/npm/v/@anchan828/nest-cache-common.svg)
+![NPM](https://img.shields.io/npm/l/@anchan828/nest-cache-common.svg)
 
 ## Description
 
-nest-cache-dependency consider dependencies. Delete those that depend on the deletion.
-
-**TODO**: Write more documentation.
-
-## Installation
-
-```bash
-$ npm i --save @anchan828/nest-cache-dependency
-```
+Shared package for @anchan828/nest-cache
 
 ## Quick Start
 
-- Import module
-
 ```ts
-@Module({
-  imports: [CacheDependencyModule.register()],
-})
-export class AppModule {}
+const obj = { id: 1, name: "name", date: new Date() };
+const json = JSON.stringify(data);
+
+parseJSON(json);
+// => equals with obj
 ```
-
-### Use with controller
-
-```ts
-@Controller()
-@UseInterceptors(CacheDependencyInterceptor)
-export class ExampleController {
-  constructor(private readonly service: ExampleService) {}
-
-  @Get("users/:userId/items")
-  @CacheKey("users/:userId/items")
-  @CacheDependency<Item[]>((cacheKey: string, items: Item[], graph: CacheDependencyGraph) => {
-    for (const item of items) {
-      graph.addNode(`item/${item.id}`, item);
-      graph.addDependency(`item/${item.id}`, cacheKey);
-    }
-  })
-  public getItems(): Item[] {
-    return this.service.getItems();
-  }
-
-  @Delete("users/:userId/items/:itemId")
-  @ClearCacheDependencies("item/:itemId")
-  public deleteItem(@Param("itemId", ParseIntPipe) itemId: number): void {
-    this.service.deleteItem(itemId);
-  }
-}
-```
-
-### Use with service
-
-```ts
-@Injectable()
-export class ExampleService {
-  constructor(private readonly cacheService: CacheDependencyService) {}
-
-  private items: Item[] = Array(5)
-    .fill(0)
-    .map((_, index) => ({ id: index, name: `Item ${index}` }));
-
-  public async getItems(userId: number): Promise<Item[]> {
-    const cacheKey = `users/${userId}/items`;
-
-    const cache = await this.cacheService.getCache<Item[]>(cacheKey);
-
-    if (cache) {
-      return cache;
-    }
-
-    await this.cacheService.createCacheDependencies((graph: CacheDependencyGraph) => {
-      graph.addNode(cacheKey, this.items);
-
-      for (const item of this.items) {
-        graph.addNode(`item/${item.id}`, item);
-        graph.addDependency(`item/${item.id}`, cacheKey);
-      }
-    });
-
-    return this.items;
-  }
-
-  public deleteItem(userId: number, itemId: number): void {
-    this.items = this.items.filter(item => item.id !== itemId);
-    this.cacheService.clearCacheDependencies(`item/${itemId}`);
-  }
-}
-```
-
-## Notes
-
-`@CacheKey` supports [route-parser](https://www.npmjs.com/package/route-parser). You can use `:name` pattern as cache key
-
-`CacheDependencyGraph` uses [dependency-graph](https://www.npmjs.com/package/dependency-graph)
 
 ## License
 
