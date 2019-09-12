@@ -108,7 +108,7 @@ export class CacheDependencyService {
   }
 
   /**
-   * Clear cache dependency.
+   * Clear dependencies of key.
    * If key have cache, delete it.
    * If dependency keys have cache, delete them.
    * @param {string} key
