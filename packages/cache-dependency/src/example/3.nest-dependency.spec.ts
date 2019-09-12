@@ -39,12 +39,12 @@ export class ExampleService {
 
       for (const item of this.items) {
         graph.addNode(`item/${item.id}`, item);
-        graph.addDependency(`item/${item.id}`, cacheKey);
+        graph.addDependency(cacheKey, `item/${item.id}`);
 
         if (Array.isArray(item.nestItems)) {
           for (const nestItem of item.nestItems) {
             graph.addNode(`item/${item.id}/nestItem/${nestItem.id}`, nestItem);
-            graph.addDependency(`item/${item.id}/nestItem/${nestItem.id}`, `item/${item.id}`);
+            graph.addDependency(`item/${item.id}`, `item/${item.id}/nestItem/${nestItem.id}`);
           }
         }
       }
@@ -54,7 +54,8 @@ export class ExampleService {
   }
 
   public deleteNestItem(userId: number, itemId: number, nestId: number): void {
-    this.cacheService.clearCacheDependencies(`item/${itemId}/nestItem/${nestId}`);
+    console.log(`delete nest item (${nestId}) cache`);
+    this.cacheService.clearCacheDependencies(`item/${itemId}`);
   }
 }
 
@@ -149,23 +150,54 @@ describe("3. Nest dependency", () => {
 
     await wait(1);
 
-    const keys = [
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/2/nestItem/1`,
-      "item/2/nestItem/1",
-      "item/2",
+    await expect(cacheService.getKeys()).resolves.toEqual([
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}users/${userId}/items`,
       `users/${userId}/items`,
-    ];
-
-    for (const key of keys) {
-      await expect(cacheService.getCache(key)).resolves.toBeDefined();
-    }
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/4`,
+      `item/4`,
+      `item/4/nestItem/1`,
+      `item/4/nestItem/0`,
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/3`,
+      `item/3`,
+      `item/3/nestItem/1`,
+      `item/3/nestItem/0`,
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/2`,
+      `item/2`,
+      `item/2/nestItem/1`,
+      `item/2/nestItem/0`,
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/1`,
+      `item/1`,
+      `item/1/nestItem/1`,
+      `item/1/nestItem/0`,
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/0`,
+      `item/0`,
+      `item/0/nestItem/1`,
+      `item/0/nestItem/0`,
+    ]);
 
     await service.deleteNestItem(userId, 2, 1);
 
     await wait(500);
 
-    for (const key of keys) {
-      await expect(cacheService.getCache(key)).resolves.toBeUndefined();
-    }
+    await expect(cacheService.getKeys()).resolves.toEqual([
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}users/${userId}/items`,
+      `users/${userId}/items`,
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/4`,
+      `item/4`,
+      `item/4/nestItem/1`,
+      `item/4/nestItem/0`,
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/3`,
+      `item/3`,
+      `item/3/nestItem/1`,
+      `item/3/nestItem/0`,
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/1`,
+      `item/1`,
+      `item/1/nestItem/1`,
+      `item/1/nestItem/0`,
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/0`,
+      `item/0`,
+      `item/0/nestItem/1`,
+      `item/0/nestItem/0`,
+    ]);
   });
 });

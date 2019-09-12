@@ -16,7 +16,6 @@ import { ClearCacheDependencies } from "../cache-dependency.decorator";
 import { CacheDependencyInterceptor } from "../cache-dependency.interceptor";
 import { CacheDependencyModule } from "../cache-dependency.module";
 import { CacheDependencyService } from "../cache-dependency.service";
-import { CACHE_DEPENDENCY_PREFIX_CACHE_KEY } from "../constants";
 import { wait } from "../test.utils";
 interface Item {
   id: number;
@@ -46,9 +45,10 @@ export class ExampleController {
   @Get("users/:userId/items")
   @CacheKey("users/:userId/items")
   @CacheDependency<Item[]>((cacheKey: string, items: Item[], graph: CacheDependencyGraph) => {
+    graph.addNode(cacheKey);
     for (const item of items) {
       graph.addNode(`item/${item.id}`, item);
-      graph.addDependency(`item/${item.id}`, cacheKey);
+      graph.addDependency(cacheKey, `item/${item.id}`);
     }
   })
   public getItems(): Item[] {
@@ -56,7 +56,7 @@ export class ExampleController {
   }
 
   @Delete("users/:userId/items/:itemId")
-  @ClearCacheDependencies("item/:itemId")
+  @ClearCacheDependencies("users/:userId/items")
   public deleteItem(@Param("itemId", ParseIntPipe) itemId: number): void {
     this.service.deleteItem(itemId);
   }
@@ -95,11 +95,15 @@ describe("1. Use with Controller", () => {
 
     await wait(1);
 
-    const keys = [`${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/2`, "item/2", `users/${userId}/items`];
-
-    for (const key of keys) {
-      await expect(service.getCache(key)).resolves.toBeDefined();
-    }
+    await expect(service.getKeys()).resolves.toEqual([
+      `cache-dependency:users/${userId}/items`,
+      `users/${userId}/items`,
+      `item/4`,
+      `item/3`,
+      `item/2`,
+      `item/1`,
+      `item/0`,
+    ]);
 
     await request(app.getHttpServer())
       .delete(`/users/${userId}/items/2`)
@@ -108,9 +112,7 @@ describe("1. Use with Controller", () => {
 
     await wait(500);
 
-    for (const key of keys) {
-      await expect(service.getCache(key)).resolves.toBeUndefined();
-    }
+    await expect(service.getKeys()).resolves.toEqual([]);
 
     await app.close();
   });

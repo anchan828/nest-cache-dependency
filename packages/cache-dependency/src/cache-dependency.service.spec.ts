@@ -47,16 +47,17 @@ describe("CacheDependencyService", () => {
     it("should clear A and A-A", async () => {
       await service.createCacheDependencies((graph: CacheDependencyGraph) => {
         graph.addNode("A", 1);
-        graph.addNode("A-A");
-        graph.addNode("A-B");
-        graph.addDependency("A-A", "A");
-        graph.addDependency("A-B", "A");
+        graph.addNode("A-A", 1);
+        graph.addNode("A-B", 1);
+        graph.addDependency("A", "A-A");
+        graph.addDependency("A", "A-B");
       });
-      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:A-B", "cache-dependency:A-A", "A"]);
 
-      await service.clearCacheDependencies("A-A");
+      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:A", "A", "A-B", "A-A"]);
 
-      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:A-B"]);
+      await service.clearCacheDependencies("A");
+
+      await expect(service.getKeys()).resolves.toEqual([]);
     });
 
     it("should clear A and A-A and A-A-A", async () => {
@@ -65,48 +66,47 @@ describe("CacheDependencyService", () => {
         graph.addNode("A-A");
         graph.addNode("A-B");
         graph.addNode("A-A-A");
-        graph.addDependency("A-A", "A");
-        graph.addDependency("A-A-A", "A-A");
-        graph.addDependency("A-B", "A");
+        graph.addDependency("A", "A-A");
+        graph.addDependency("A-A", "A-A-A");
+        graph.addDependency("A", "A-B");
       });
 
-      await expect(service.getKeys()).resolves.toEqual([
-        "cache-dependency:A-A-A",
-        "cache-dependency:A-A",
-        "cache-dependency:A-B",
-        "A",
-      ]);
+      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:A", "A", "cache-dependency:A-A"]);
 
       await service.clearCacheDependencies("A-A-A");
 
-      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:A-B"]);
+      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:A", "A", "cache-dependency:A-A"]);
     });
 
     it("should clear all", async () => {
       await service.createCacheDependencies((graph: CacheDependencyGraph) => {
         graph.addNode("A", 1);
-        graph.addNode("A-A");
-        graph.addNode("A-B");
-        graph.addNode("A-B-A");
-        graph.addNode("A-A-A");
-        graph.addDependency("A-A", "A");
-        graph.addDependency("A-A-A", "A-A");
-        graph.addDependency("A-B", "A");
-        graph.addDependency("A-B-A", "A-B");
-        graph.addDependency("A-B-A", "A-A-A");
+        graph.addNode("A-A", 1);
+        graph.addNode("A-B", 1);
+        graph.addNode("A-B-A", 1);
+        graph.addNode("A-A-A", 1);
+        graph.addDependency("A", "A-A");
+        graph.addDependency("A-A", "A-A-A");
+        graph.addDependency("A", "A-B");
+        graph.addDependency("A-B", "A-B-A");
+        graph.addDependency("A-A-A", "A-B-A");
       });
 
       await expect(service.getKeys()).resolves.toEqual([
-        "cache-dependency:A-B-A",
-        "cache-dependency:A-A-A",
-        "cache-dependency:A-A",
-        "cache-dependency:A-B",
+        "cache-dependency:A",
         "A",
+        "cache-dependency:A-B",
+        "A-B",
+        "cache-dependency:A-A",
+        "A-A",
+        "cache-dependency:A-A-A",
+        "A-A-A",
+        "A-B-A",
       ]);
 
-      await service.clearCacheDependencies("A-B-A");
+      await service.clearCacheDependencies("A-A");
 
-      await expect(service.getKeys()).resolves.toEqual([]);
+      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:A", "A", "cache-dependency:A-B", "A-B"]);
     });
   });
 });

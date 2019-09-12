@@ -32,7 +32,7 @@ export class ExampleService {
 
       for (const item of this.items) {
         graph.addNode(`item/${item.id}`, item);
-        graph.addDependency(`item/${item.id}`, cacheKey);
+        graph.addDependency(cacheKey, `item/${item.id}`);
       }
     });
 
@@ -41,7 +41,7 @@ export class ExampleService {
 
   public deleteItem(userId: number, itemId: number): void {
     this.items = this.items.filter(item => item.id !== itemId);
-    this.cacheService.clearCacheDependencies(`item/${itemId}`);
+    this.cacheService.clearCacheDependencies(`users/${userId}/items`);
   }
 }
 
@@ -70,18 +70,20 @@ describe("2. Use with Service", () => {
     ]);
 
     await wait(1);
-
-    const keys = [`${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/2`, "item/2", `users/${userId}/items`];
-    for (const key of keys) {
-      await expect(cacheService.getCache(key)).resolves.toBeDefined();
-    }
+    await expect(cacheService.getKeys()).resolves.toEqual([
+      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}users/${userId}/items`,
+      `users/${userId}/items`,
+      `item/4`,
+      `item/3`,
+      `item/2`,
+      `item/1`,
+      `item/0`,
+    ]);
 
     await service.deleteItem(userId, 2);
 
     await wait(500);
 
-    for (const key of keys) {
-      await expect(cacheService.getCache(key)).resolves.toBeUndefined();
-    }
+    await expect(cacheService.getKeys()).resolves.toEqual([]);
   });
 });
