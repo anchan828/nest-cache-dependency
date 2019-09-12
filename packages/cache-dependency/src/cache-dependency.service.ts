@@ -4,6 +4,7 @@ import { DepGraph } from "dependency-graph";
 import { CacheDependencyGraph, CreateCacheDependencyFunction } from "./cache-dependency.interface";
 import { createDependenciesCacheKey } from "./cache-dependency.utils";
 import { CACHE_DEPENDENCY_MODULE } from "./constants";
+
 /**
  * Access to cache manager and dependency
  *
@@ -59,6 +60,17 @@ export class CacheDependencyService {
   }
 
   /**
+   * Get all keys
+   *
+   * @param {string} [pattern]
+   * @returns {Promise<string[]>}
+   * @memberof CacheDependencyService
+   */
+  public async getKeys(pattern?: string): Promise<string[]> {
+    return this.cacheManager.keys(pattern);
+  }
+
+  /**
    * Create dependency graph.
    * If node has data, save it.
    *
@@ -107,7 +119,6 @@ export class CacheDependencyService {
     const dependenciesCacheKey = createDependenciesCacheKey(key);
 
     const values = (await this.getCache<string[]>(dependenciesCacheKey)) as string[];
-
     if (Array.isArray(values)) {
       for (const value of values) {
         await this.clearCacheDependencies(value);
