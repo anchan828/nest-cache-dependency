@@ -39,7 +39,7 @@ export class ExampleController {
   @CacheDependency<Item[]>((cacheKey: string, items: Item[], graph: CacheDependencyGraph) => {
     for (const item of items) {
       graph.addNode(`item/${item.id}`, item);
-      graph.addDependency(`item/${item.id}`, cacheKey);
+      graph.addDependency(cacheKey, `item/${item.id}`);
     }
   })
   public getItems(): Item[] {
@@ -47,7 +47,7 @@ export class ExampleController {
   }
 
   @Delete("users/:userId/items/:itemId")
-  @ClearCacheDependencies("item/:itemId")
+  @ClearCacheDependencies("users/:userId/items")
   public deleteItem(@Param("itemId", ParseIntPipe) itemId: number): void {
     this.service.deleteItem(itemId);
   }
@@ -79,7 +79,7 @@ export class ExampleService {
 
       for (const item of this.items) {
         graph.addNode(`item/${item.id}`, item);
-        graph.addDependency(`item/${item.id}`, cacheKey);
+        graph.addDependency(cacheKey, `item/${item.id}`);
       }
     });
 
@@ -88,7 +88,7 @@ export class ExampleService {
 
   public deleteItem(userId: number, itemId: number): void {
     this.items = this.items.filter(item => item.id !== itemId);
-    this.cacheService.clearCacheDependencies(`item/${itemId}`);
+    this.cacheService.clearCacheDependencies(`users/${userId}/items`);
   }
 }
 ```
