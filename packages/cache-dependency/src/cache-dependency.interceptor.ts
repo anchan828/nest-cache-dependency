@@ -33,7 +33,7 @@ export class CacheDependencyInterceptor implements NestInterceptor {
     }
 
     const func: CacheDependencyFunction<any> = this.reflector.get(CACHE_DEPENDENCY_KEY_METADATA, context.getHandler());
-    let clearCacheKey: string = this.reflector.get(CLEAR_CACHE_DEPENDENCIES_KEY_MATADATA, context.getHandler());
+    const clearCacheKeys: string[] = this.reflector.get(CLEAR_CACHE_DEPENDENCIES_KEY_MATADATA, context.getHandler());
     return next.handle().pipe(
       tap(async response => {
         if (func) {
@@ -44,9 +44,14 @@ export class CacheDependencyInterceptor implements NestInterceptor {
           func(cacheKey, response, graph);
           await this.service.createCacheDependencies(graph);
         }
-        if (clearCacheKey) {
-          clearCacheKey = this.applyCacheKeyParams(clearCacheKey, params);
-          await this.service.clearCacheDependencies(clearCacheKey);
+        if (Array.isArray(clearCacheKeys)) {
+          for (const clearCacheKey of clearCacheKeys) {
+            if (!clearCacheKey) {
+              continue;
+            }
+
+            await this.service.clearCacheDependencies(this.applyCacheKeyParams(clearCacheKey, params));
+          }
         }
       }),
     );

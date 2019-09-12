@@ -4,5 +4,5 @@ import { CACHE_DEPENDENCY_KEY_METADATA, CLEAR_CACHE_DEPENDENCIES_KEY_MATADATA } 
 export const CacheDependency = <T>(func: CacheDependencyFunction<T>): Function =>
   SetMetadata(CACHE_DEPENDENCY_KEY_METADATA, func);
 
-export const ClearCacheDependencies = (cacheKey: string): Function =>
-  SetMetadata(CLEAR_CACHE_DEPENDENCIES_KEY_MATADATA, cacheKey);
+export const ClearCacheDependencies = (...cacheKeys: string[]): Function =>
+  SetMetadata(CLEAR_CACHE_DEPENDENCIES_KEY_MATADATA, cacheKeys);
