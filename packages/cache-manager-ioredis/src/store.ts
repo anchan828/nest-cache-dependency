@@ -66,7 +66,12 @@ class RedisStore implements CacheManager {
   }
 
   public async del(...keys: string[]): Promise<void> {
-    await this.redisCache.del(...keys.map(key => key));
+    if (this.memoryStore) {
+      for (const key of keys) {
+        await this.memoryStore.del(key);
+      }
+    }
+    await this.redisCache.del(...keys);
   }
 
   public async keys(pattern?: string): Promise<string[]> {
