@@ -25,6 +25,19 @@ caching({
 });
 ```
 
+## Use memory store
+
+You can cache results of redis to in-memory.
+
+```ts
+caching({
+  store: redisStore,
+  host: "localhost",
+  enabledInMemory: true, // default: false
+  inMemoryTTL: 5, // default: 5
+});
+```
+
 ## Notes
 
 - Using IORedis v4

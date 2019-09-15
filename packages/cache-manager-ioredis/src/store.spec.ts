@@ -8,7 +8,7 @@ describe("RedisStore", () => {
     store = (caching({
       store: redisStore,
       host: process.env.REDIS_HOST || "localhost",
-      ttl: 10,
+      ttl: 5,
     } as any) as any) as CacheManager;
   });
 
@@ -96,5 +96,29 @@ describe("RedisStore", () => {
     await store.mset("key1", "key1:value", "key2", "key2:value", "key3", "key3:value");
 
     await expect(store.mget(["key1", "key2", "key3"])).resolves.toEqual(["key1:value", "key2:value", "key3:value"]);
+  });
+});
+
+describe("In-memory cache", () => {
+  let store: CacheManager;
+
+  beforeEach(async () => {
+    store = (caching({
+      store: redisStore,
+      host: process.env.REDIS_HOST || "localhost",
+      ttl: 5,
+      enabledInMemory: true,
+    } as any) as any) as CacheManager;
+  });
+
+  it("should get from in-memory", async () => {
+    const key = "key";
+    await store.set(key, key);
+
+    // from redis
+    await store.get(key);
+
+    // from in-memory
+    await store.get(key);
   });
 });

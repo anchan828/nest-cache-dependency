@@ -1,5 +1,6 @@
 import { CacheManager, parseJSON } from "@anchan828/nest-cache-common";
 import { CacheStore, CacheStoreFactory, LiteralObject } from "@nestjs/common";
+import { caching } from "cache-manager";
 import * as Redis from "ioredis";
 import { CACHE_KEY_PREFIX, CACHE_STORE_NAME } from "./constants";
 import { RedisStoreArgs } from "./store.interface";
@@ -8,15 +9,29 @@ class RedisStore implements CacheManager {
 
   public readonly name: string = CACHE_STORE_NAME;
 
+  private readonly memoryStore?: CacheManager;
+
   constructor(private readonly args: RedisStoreArgs) {
     if (!args.keyPrefix) {
       args.keyPrefix = CACHE_KEY_PREFIX;
+    }
+
+    if (args.enabledInMemory) {
+      this.memoryStore = (caching({
+        store: "memory",
+        max: Number.MAX_SAFE_INTEGER,
+        ttl: args.inMemoryTTL || 5,
+      }) as unknown) as CacheManager;
     }
     this.redisCache = new Redis(args);
   }
 
   public async set(key: any, value: any): Promise<void> {
     const json = JSON.stringify(value) || '"undefined"';
+
+    if (this.memoryStore) {
+      await this.memoryStore.del(key);
+    }
 
     if (this.args.ttl) {
       await this.redisCache.setex(key, this.args.ttl, json);
@@ -26,13 +41,28 @@ class RedisStore implements CacheManager {
   }
 
   public async get<T>(key: string): Promise<T | undefined> {
-    const result = await this.redisCache.get(key);
+    let result: T | null | undefined;
+    if (this.memoryStore) {
+      result = await this.memoryStore.get(key);
+    }
 
-    if (!result) {
+    if (result) {
+      return result;
+    }
+
+    const rawResult = await this.redisCache.get(key);
+
+    if (!rawResult) {
       return;
     }
 
-    return parseJSON<T>(result);
+    result = parseJSON<T>(rawResult);
+
+    if (this.memoryStore) {
+      await this.memoryStore.set(key, result);
+    }
+
+    return result;
   }
 
   public async del(...keys: string[]): Promise<void> {
