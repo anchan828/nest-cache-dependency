@@ -3,6 +3,8 @@
 ![npm](https://img.shields.io/npm/v/@anchan828/nest-cache-dependency.svg)
 ![NPM](https://img.shields.io/npm/l/@anchan828/nest-cache-dependency.svg)
 
+A cache dependency module for Nest framework (node.js) https://nestjs.com/
+
 ## Description
 
 nest-cache-dependency consider dependencies. Delete those that depend on the deletion.
