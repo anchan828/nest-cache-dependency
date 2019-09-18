@@ -109,6 +109,19 @@ describe("In-memory cache", () => {
       ttl: 5,
       enabledInMemory: true,
     } as any) as any) as CacheManager;
+
+    await store.reset();
+  });
+
+  it("should get from in-memory", async () => {
+    const key = "key";
+    await store.set(key, key);
+
+    // from redis
+    await store.get(key);
+
+    // from in-memory
+    await store.get(key);
   });
 
   it("should get from in-memory", async () => {

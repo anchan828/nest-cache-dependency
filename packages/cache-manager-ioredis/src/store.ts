@@ -86,6 +86,9 @@ class RedisStore implements CacheManager {
   }
 
   public async reset(): Promise<void> {
+    if (this.memoryStore) {
+      await this.memoryStore.reset();
+    }
     const keys = await this.keys();
     if (keys.length !== 0) {
       await this.del(...keys.map(key => key.replace(new RegExp(`^${this.args.keyPrefix}`), "")));
