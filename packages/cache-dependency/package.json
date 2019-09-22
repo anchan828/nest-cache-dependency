@@ -1,6 +1,6 @@
 {
   "name": "@anchan828/nest-cache-dependency",
-  "version": "0.1.7",
+  "version": "0.1.10",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/anchan828/nest-cache#readme",
   "dependencies": {
-    "@anchan828/nest-cache-common": "^0.1.7",
+    "@anchan828/nest-cache-common": "^0.1.10",
     "cache-manager": "2.10.0",
     "dependency-graph": "0.8.0",
     "route-parser": "0.0.5"
