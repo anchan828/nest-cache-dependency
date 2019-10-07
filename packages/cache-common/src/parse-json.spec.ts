@@ -14,7 +14,7 @@ describe("parseJSON", () => {
   });
 
   it("should parse date", () => {
-    const data = { id: 1, name: "name", date: new Date() };
+    const data = { id: 1, name: "name 1", date: new Date() };
     expect(parseJSON(JSON.stringify(data))).toStrictEqual(data);
   });
 });
