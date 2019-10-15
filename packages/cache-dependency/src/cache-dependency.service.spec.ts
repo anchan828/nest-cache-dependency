@@ -3,6 +3,7 @@ import { Test } from "@nestjs/testing";
 import { caching } from "cache-manager";
 import { CacheDependencyGraph } from "./cache-dependency.interface";
 import { CacheDependencyService } from "./cache-dependency.service";
+import { wait } from "./test.utils";
 
 describe("CacheDependencyService", () => {
   let service: CacheDependencyService;
@@ -39,6 +40,14 @@ describe("CacheDependencyService", () => {
       await service.setCache("test", 1);
       await expect(service.getCache("test")).resolves.toBe(1);
       await service.deleteCache("test");
+      await expect(service.getCache("test")).resolves.toBeUndefined();
+    });
+
+    it("set ttl", async () => {
+      await expect(service.getCache("test")).resolves.toBeUndefined();
+      await service.setCache("test", 1, 1);
+      await expect(service.getCache("test")).resolves.toBe(1);
+      await wait(2000);
       await expect(service.getCache("test")).resolves.toBeUndefined();
     });
   });

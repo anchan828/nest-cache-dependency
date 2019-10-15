@@ -1,4 +1,4 @@
-import { CacheManager } from "@anchan828/nest-cache-common";
+import { CacheManager, CacheManagerSetOptions } from "@anchan828/nest-cache-common";
 import { CACHE_MANAGER, Inject, Injectable, Logger } from "@nestjs/common";
 import { DepGraph } from "dependency-graph";
 import { CacheDependencyGraph, CreateCacheDependencyFunction } from "./cache-dependency.interface";
@@ -40,12 +40,19 @@ export class CacheDependencyService {
    * @returns {Promise<void>}
    * @memberof CacheDependencyService
    */
-  public async setCache(key: string, value: unknown): Promise<void> {
+  public async setCache(key: string, value: unknown, ttl?: number): Promise<void> {
     if (!value) {
       this.logger.debug(`cache manager don't store 'value' because 'value' is undefined.`);
       return;
     }
-    await this.cacheManager.set(key, value);
+
+    const options: CacheManagerSetOptions = {};
+
+    if (ttl) {
+      options.ttl = ttl;
+    }
+
+    await this.cacheManager.set(key, value, options);
   }
 
   /**

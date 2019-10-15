@@ -1,4 +1,4 @@
-import { CacheManager, parseJSON } from "@anchan828/nest-cache-common";
+import { CacheManager, CacheManagerSetOptions, parseJSON } from "@anchan828/nest-cache-common";
 import { CacheStore, CacheStoreFactory, LiteralObject } from "@nestjs/common";
 import { caching } from "cache-manager";
 import * as Redis from "ioredis";
@@ -26,14 +26,16 @@ class RedisStore implements CacheManager {
     this.redisCache = new Redis(args);
   }
 
-  public async set(key: any, value: any): Promise<void> {
+  public async set(key: any, value: any, options?: CacheManagerSetOptions): Promise<void> {
     const json = JSON.stringify(value) || '"undefined"';
 
     if (this.memoryStore) {
       await this.memoryStore.del(key);
     }
 
-    if (this.args.ttl) {
+    if (options && options.ttl) {
+      await this.redisCache.setex(key, options.ttl, json);
+    } else if (this.args.ttl) {
       await this.redisCache.setex(key, this.args.ttl, json);
     } else {
       await this.redisCache.set(key, json);
