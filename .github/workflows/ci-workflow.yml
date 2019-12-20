@@ -19,7 +19,7 @@ jobs:
         ports:
           - "6379:6379"
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v1
         with:
           fetch-depth: 1
       - name: Install npm packages
