@@ -40,7 +40,7 @@
     "@typescript-eslint/eslint-plugin": "2.10.0",
     "@typescript-eslint/parser": "2.10.0",
     "cache-manager": "2.10.1",
-    "eslint": "6.7.2",
+    "eslint": "6.8.0",
     "eslint-config-prettier": "6.7.0",
     "eslint-plugin-prettier": "3.1.2",
     "husky": "3.0.9",
