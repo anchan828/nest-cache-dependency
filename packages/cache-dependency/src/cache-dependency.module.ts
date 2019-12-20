@@ -5,6 +5,7 @@ import {
   DynamicModule,
   Global,
   Module,
+  Provider,
 } from "@nestjs/common";
 import { CacheDependencyInterceptor } from "./cache-dependency.interceptor";
 import { CacheDependencyService } from "./cache-dependency.service";
@@ -30,8 +31,8 @@ export class CacheDependencyModule {
     return {
       module: CacheDependencyModule,
       imports: [CacheModule.register(options)],
-      providers: [CacheDependencyService, CacheDependencyInterceptor],
-      exports: [CacheDependencyService, CacheDependencyInterceptor],
+      providers: this.providers,
+      exports: this.providers,
     };
   }
 
@@ -47,8 +48,10 @@ export class CacheDependencyModule {
     return {
       module: CacheDependencyModule,
       imports: [CacheModule.registerAsync(options)],
-      providers: [CacheDependencyService, CacheDependencyInterceptor],
-      exports: [CacheDependencyService, CacheDependencyInterceptor],
+      providers: this.providers,
+      exports: this.providers,
     };
   }
+
+  private static providers: Provider[] = [CacheDependencyService, CacheDependencyInterceptor];
 }
