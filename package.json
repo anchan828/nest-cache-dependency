@@ -19,14 +19,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anchan828/nest-cache.git"
+    "url": "git+https://github.com/anchan828/nest-cache-dependency.git"
   },
   "author": "anchan828 <anchan828@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/anchan828/nest-cache/issues"
+    "url": "https://github.com/anchan828/nest-cache-dependency/issues"
   },
-  "homepage": "https://github.com/anchan828/nest-cache#readme",
+  "homepage": "https://github.com/anchan828/nest-cache-dependency#readme",
   "devDependencies": {
     "@commitlint/cli": "8.2.0",
     "@commitlint/config-conventional": "8.2.0",
