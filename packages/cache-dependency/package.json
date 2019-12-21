@@ -29,7 +29,7 @@
   "dependencies": {
     "@anchan828/nest-cache-common": "^0.1.21",
     "cache-manager": "2.10.1",
-    "dependency-graph": "0.8.0",
+    "dependency-graph": "0.8.1",
     "route-parser": "0.0.5"
   },
   "devDependencies": {
