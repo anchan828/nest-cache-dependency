@@ -28,7 +28,7 @@
   "homepage": "https://github.com/anchan828/nest-cache-dependency#readme",
   "dependencies": {
     "@anchan828/nest-cache-common": "^0.1.27",
-    "cache-manager": "2.10.1",
+    "cache-manager": "2.10.2",
     "dependency-graph": "0.8.1",
     "route-parser": "0.0.5"
   },
