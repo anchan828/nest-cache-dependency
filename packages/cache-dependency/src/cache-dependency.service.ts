@@ -58,12 +58,12 @@ export class CacheDependencyService {
   /**
    * Delete cache from store
    *
-   * @param {string} key
+   * @param {string} keys
    * @returns {Promise<void>}
    * @memberof CacheDependencyService
    */
-  public async deleteCache(key: string): Promise<void> {
-    await this.cacheManager.del(key);
+  public async deleteCache(...keys: string[]): Promise<void> {
+    await this.cacheManager.del(...keys);
   }
 
   /**

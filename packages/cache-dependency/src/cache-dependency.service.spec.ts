@@ -50,6 +50,13 @@ describe("CacheDependencyService", () => {
       await wait(2000);
       await expect(service.getCache("test")).resolves.toBeUndefined();
     });
+
+    it("set date object", async () => {
+      const date = new Date();
+      await expect(service.getCache("test")).resolves.toBeUndefined();
+      await service.setCache("test", { date });
+      await expect(service.getCache("test")).resolves.toEqual({ date });
+    });
   });
 
   describe("dependency", () => {
