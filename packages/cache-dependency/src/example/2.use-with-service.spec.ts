@@ -40,7 +40,7 @@ export class ExampleService {
   }
 
   public deleteItem(userId: number, itemId: number): void {
-    this.items = this.items.filter(item => item.id !== itemId);
+    this.items = this.items.filter((item) => item.id !== itemId);
     this.cacheService.clearCacheDependencies(`users/${userId}/items`);
   }
 }

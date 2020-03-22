@@ -91,13 +91,13 @@ class RedisStore implements CacheManager {
     }
     const keys = await this.keys();
     if (keys.length !== 0) {
-      await this.del(...keys.map(key => key.replace(new RegExp(`^${this.args.keyPrefix}`), "")));
+      await this.del(...keys.map((key) => key.replace(new RegExp(`^${this.args.keyPrefix}`), "")));
     }
   }
 
   public async mget<T>(keys: string[]): Promise<Array<T | undefined>> {
     const results = (await this.redisCache.mget(...keys)) as Array<string | undefined>;
-    return results.map(result => parseJSON<T>(result));
+    return results.map((result) => parseJSON<T>(result));
   }
 
   public async mset<T>(...keyOrValues: Array<string | T>): Promise<void> {

@@ -33,7 +33,7 @@ export class ExampleService {
   }
 
   public deleteItem(itemId: number): void {
-    this.items = this.items.filter(item => item.id !== itemId);
+    this.items = this.items.filter((item) => item.id !== itemId);
   }
 }
 
@@ -105,10 +105,7 @@ describe("1. Use with Controller", () => {
       `item/0`,
     ]);
 
-    await request(app.getHttpServer())
-      .delete(`/users/${userId}/items/2`)
-      .expect(200)
-      .expect({});
+    await request(app.getHttpServer()).delete(`/users/${userId}/items/2`).expect(200).expect({});
 
     await wait(500);
 
