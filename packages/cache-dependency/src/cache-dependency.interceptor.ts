@@ -35,7 +35,7 @@ export class CacheDependencyInterceptor implements NestInterceptor {
     const func: CacheDependencyFunction<any> = this.reflector.get(CACHE_DEPENDENCY_KEY_METADATA, context.getHandler());
     const clearCacheKeys: string[] = this.reflector.get(CLEAR_CACHE_DEPENDENCIES_KEY_MATADATA, context.getHandler());
     return next.handle().pipe(
-      tap(async response => {
+      tap(async (response) => {
         if (func) {
           const graph = new DepGraph<any>({ circular: true });
           if (cacheKey) {
