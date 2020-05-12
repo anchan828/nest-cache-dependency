@@ -33,7 +33,7 @@
     "route-parser": "0.0.5"
   },
   "devDependencies": {
-    "@types/cache-manager": "2.10.2",
+    "@types/cache-manager": "2.10.3",
     "@types/route-parser": "0.1.3"
   }
 }
