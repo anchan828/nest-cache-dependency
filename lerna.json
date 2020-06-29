@@ -1,14 +1,10 @@
 {
-  "packages": [
-    "packages/*"
-  ],
+  "packages": ["packages/*"],
   "command": {
     "publish": {
-      "ignoreChanges": [
-        "dist/**/*"
-      ],
+      "ignoreChanges": ["dist/**/*"],
       "message": "chore(release): publish %s"
     }
   },
-  "version": "0.1.50"
+  "version": "0.1.51"
 }
