@@ -120,6 +120,17 @@ describe("CacheDependencyService", () => {
         "A-B-A",
       ]);
 
+      await expect(service.getCacheDependencyKeys("A-A")).resolves.toEqual([
+        "A-B-A",
+        "cache-dependency:A-B-A",
+        "A-A-A",
+        "cache-dependency:A-A-A",
+        "A-B-A",
+        "cache-dependency:A-B-A",
+        "A-A",
+        "cache-dependency:A-A",
+      ]);
+
       await service.clearCacheDependencies("A-A");
 
       await expect(service.getKeys()).resolves.toEqual(["cache-dependency:A", "A", "cache-dependency:A-B", "A-B"]);

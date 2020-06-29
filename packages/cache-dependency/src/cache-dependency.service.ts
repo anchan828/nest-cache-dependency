@@ -115,6 +115,28 @@ export class CacheDependencyService {
   }
 
   /**
+   * Get all dependency keys of key
+   *
+   * @param {string} key
+   * @param {string[]} [dependencyKeys=[]]
+   * @returns {Promise<string[]>}
+   * @memberof CacheDependencyService
+   */
+  public async getCacheDependencyKeys(key: string): Promise<string[]> {
+    const dependencyKeys: string[] = [];
+    const dependenciesCacheKey = createDependenciesCacheKey(key);
+
+    const values = (await this.getCache<string[]>(dependenciesCacheKey)) as string[];
+    if (Array.isArray(values)) {
+      for (const value of values) {
+        dependencyKeys.push(...(await this.getCacheDependencyKeys(value)));
+      }
+    }
+    dependencyKeys.push(key, dependenciesCacheKey);
+    return dependencyKeys;
+  }
+
+  /**
    * Clear dependencies of key.
    * If key have cache, delete it.
    * If dependency keys have cache, delete them.
@@ -123,17 +145,8 @@ export class CacheDependencyService {
    * @memberof CacheDependencyService
    */
   public async clearCacheDependencies(key: string): Promise<void> {
-    const dependenciesCacheKey = createDependenciesCacheKey(key);
-
-    const values = (await this.getCache<string[]>(dependenciesCacheKey)) as string[];
-    if (Array.isArray(values)) {
-      for (const value of values) {
-        await this.clearCacheDependencies(value);
-      }
-    }
-
-    await this.deleteCache(key);
-    await this.deleteCache(dependenciesCacheKey);
+    const cacheKeys = await this.getCacheDependencyKeys(key);
+    await this.deleteCache(...cacheKeys);
   }
 
   /**
