@@ -38,7 +38,7 @@
     "@types/node": "11.15.27",
     "@types/supertest": "2.0.10",
     "@typescript-eslint/eslint-plugin": "4.3.0",
-    "@typescript-eslint/parser": "4.2.0",
+    "@typescript-eslint/parser": "4.3.0",
     "cache-manager": "3.4.0",
     "eslint": "7.10.0",
     "eslint-config-prettier": "6.12.0",
