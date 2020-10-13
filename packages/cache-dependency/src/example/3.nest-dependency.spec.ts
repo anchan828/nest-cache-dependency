@@ -53,9 +53,9 @@ export class ExampleService {
     return this.items;
   }
 
-  public deleteNestItem(userId: number, itemId: number, nestId: number): void {
+  public async deleteNestItem(userId: number, itemId: number, nestId: number): Promise<void> {
     console.log(`delete nest item (${nestId}) cache`);
-    this.cacheService.clearCacheDependencies(`item/${itemId}`);
+    await this.cacheService.clearCacheDependencies(`item/${itemId}`);
   }
 }
 
