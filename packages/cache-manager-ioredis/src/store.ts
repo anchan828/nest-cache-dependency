@@ -33,8 +33,10 @@ class RedisStore implements CacheManager {
       await this.memoryStore.del(key);
     }
 
-    if (options && options.ttl) {
+    if (options && options.ttl && options.ttl !== Number.MAX_SAFE_INTEGER) {
       await this.redisCache.setex(key, options.ttl, json);
+    } else if (options && options.ttl && options.ttl === Number.MAX_SAFE_INTEGER) {
+      await this.redisCache.set(key, json);
     } else if (this.args.ttl) {
       await this.redisCache.setex(key, this.args.ttl, json);
     } else {

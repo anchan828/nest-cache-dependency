@@ -1,19 +1,21 @@
 import { CacheManager } from "@anchan828/nest-cache-common";
 import { caching } from "cache-manager";
+import * as Redis from "ioredis";
 import { redisStore } from "./store";
 describe("RedisStore", () => {
   let store: CacheManager;
-
+  let redis: Redis.Redis;
   beforeEach(async () => {
     store = (caching({
       store: redisStore,
       host: process.env.REDIS_HOST || "localhost",
       ttl: 5,
     } as any) as any) as CacheManager;
+    redis = (store as any).store.redisCache as Redis.Redis;
   });
 
   afterEach(async () => {
-    // await (store as any).store.redisCache.flushdb();
+    await redis.flushdb();
   });
 
   it("create cache instance", () => {
@@ -21,6 +23,10 @@ describe("RedisStore", () => {
   });
 
   it("should set cache", async () => {
+    store = (caching({
+      store: redisStore,
+      host: process.env.REDIS_HOST || "localhost",
+    } as any) as any) as CacheManager;
     const key = "test";
     await store.set(key, {
       id: 1,
@@ -39,6 +45,37 @@ describe("RedisStore", () => {
     });
   });
 
+  it("should set cache with ttl", async () => {
+    const key = "test";
+    await store.set(key, {
+      id: 1,
+      name: "Name",
+      nest: {
+        id: 10,
+      },
+    });
+
+    await expect(store.get(key)).resolves.toEqual({
+      id: 1,
+      name: "Name",
+      nest: {
+        id: 10,
+      },
+    });
+  });
+
+  it("should set ttl", async () => {
+    const key = "test";
+    await store.set(key, { id: 1 }, { ttl: 10 });
+    await expect(redis.ttl(key)).resolves.toBeGreaterThan(5);
+  });
+
+  it("should set ttl: Number.MAX_SAFE_INTEGER", async () => {
+    const key = "test";
+    await store.set(key, { id: 1 }, { ttl: Number.MAX_SAFE_INTEGER });
+    await expect(redis.ttl(key)).resolves.toEqual(-1);
+  });
+
   it("should delete cache", async () => {
     const key = "test";
     await store.set(key, key);
@@ -54,7 +91,7 @@ describe("RedisStore", () => {
 
     const results = await store.keys();
 
-    await expect(results.sort()).toEqual(["cache:key1", "cache:key2", "cache:key3"]);
+    expect(results.sort()).toEqual(["cache:key1", "cache:key2", "cache:key3"]);
   });
 
   it("should reset cache keys", async () => {
@@ -63,10 +100,10 @@ describe("RedisStore", () => {
       await store.set(key, key);
     }
     let results = await store.keys();
-    await expect(results.sort()).toEqual(["cache:key1", "cache:key2", "cache:key3"]);
+    expect(results.sort()).toEqual(["cache:key1", "cache:key2", "cache:key3"]);
     await store.reset();
     results = await store.keys();
-    await expect(results.sort()).toEqual([]);
+    expect(results.sort()).toEqual([]);
   });
 
   it("should change key prefix", async () => {
@@ -80,7 +117,7 @@ describe("RedisStore", () => {
     const key = "key";
     await store.set(key, key);
     const results = await store.keys();
-    await expect(results.sort()).toEqual(["changed:key"]);
+    expect(results.sort()).toEqual(["changed:key"]);
   });
 
   it("should mget", async () => {
