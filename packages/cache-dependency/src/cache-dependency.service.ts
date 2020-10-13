@@ -109,7 +109,7 @@ export class CacheDependencyService {
 
       const newValues = Array.from(new Set([...value, ...dependencies]));
       if (newValues.length !== 0 && !this.arrayEquals(value, newValues)) {
-        await this.setCache(dependenciesCacheKey, newValues, -1);
+        await this.setCache(dependenciesCacheKey, newValues, Number.MAX_SAFE_INTEGER);
       }
     }
   }
