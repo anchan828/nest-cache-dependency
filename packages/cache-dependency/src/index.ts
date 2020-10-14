@@ -7,3 +7,4 @@ export {
 } from "./cache-dependency.interface";
 export { CacheDependencyModule } from "./cache-dependency.module";
 export { CacheDependencyService } from "./cache-dependency.service";
+export { CACHE_DEPENDENCY_PREFIX_CACHE_KEY } from "./constants";
