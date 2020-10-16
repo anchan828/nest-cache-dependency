@@ -36,6 +36,9 @@ export class CacheDependencyInterceptor implements NestInterceptor {
     const clearCacheKeys: string[] = this.reflector.get(CLEAR_CACHE_DEPENDENCIES_KEY_MATADATA, context.getHandler());
     return next.handle().pipe(
       tap(async (response) => {
+        if (cacheKey && !func) {
+          await this.service.setCache(cacheKey, response);
+        }
         if (func) {
           const graph = new DepGraph<any>({ circular: true });
           if (cacheKey) {
