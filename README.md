@@ -48,11 +48,17 @@ export class ExampleController {
   public getItems(): Item[] {
     return this.service.getItems();
   }
+  
+  @Get("users/:userId/items/:itemId")
+  @CacheKey("users/:userId/items/:itemId")
+  public getItem(@Param("userId", ParseIntPipe) userId: number, @Param("itemId", ParseIntPipe) itemId: number): Item {
+    return this.service.getItem(userId, itemId);
+  }
 
   @Delete("users/:userId/items/:itemId")
   @ClearCacheDependencies("users/:userId/items/:itemId")
-  public deleteItem(@Param("itemId", ParseIntPipe) itemId: number): void {
-    this.service.deleteItem(itemId);
+  public deleteItem(@Param("userId", ParseIntPipe) userId: number, @Param("itemId", ParseIntPipe) itemId: number): void {
+    this.service.deleteItem(userId, itemId);
   }
 }
 ```
@@ -89,9 +95,24 @@ export class ExampleService {
     return this.items;
   }
 
-  public deleteItem(userId: number, itemId: number): void {
+  public async getItem(userId: number, itemId: number): Promise<Item> {
+    const cacheKey = `users/${userId}/items/${itemId}`;
+
+    const cache = await this.cacheService.getCache<Item>(cacheKey);
+
+    if (cache) {
+      return cache;
+    }
+    
+    const item = this.items.find(item => item.id === itemId);
+    await this.cacheService.setCache(cacheKey, item);
+    
+    return item;
+  }
+  
+  public async deleteItem(userId: number, itemId: number): Promise<void> {
     this.items = this.items.filter(item => item.id !== itemId);
-    this.cacheService.clearCacheDependencies(`users/${userId}/items/${itemId}`);
+    await this.cacheService.clearCacheDependencies(`users/${userId}/items/${itemId}`);
   }
 }
 ```
