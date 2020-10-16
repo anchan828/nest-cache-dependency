@@ -87,7 +87,7 @@ export class CacheDependencyService {
    */
   public async createCacheDependencies(graph: CacheDependencyGraph | CreateCacheDependencyFunction): Promise<void> {
     if (typeof graph === "function") {
-      const g = new DepGraph<any>({ circular: true });
+      const g = new DepGraph<any>();
       graph(g);
       graph = g;
     }
@@ -118,7 +118,6 @@ export class CacheDependencyService {
    * Get all dependency keys of key
    *
    * @param {string} key
-   * @param {string[]} [dependencyKeys=[]]
    * @returns {Promise<string[]>}
    * @memberof CacheDependencyService
    */

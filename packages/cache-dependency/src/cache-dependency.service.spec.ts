@@ -4,7 +4,6 @@ import { caching } from "cache-manager";
 import { CacheDependencyGraph } from "./cache-dependency.interface";
 import { CacheDependencyService } from "./cache-dependency.service";
 import { wait } from "./test.utils";
-
 describe("CacheDependencyService", () => {
   let service: CacheDependencyService;
   beforeEach(async () => {
@@ -97,6 +96,22 @@ describe("CacheDependencyService", () => {
       await service.clearCacheDependencies("A-A-A");
 
       await expect(service.getKeys()).resolves.toEqual(["cache-dependency:A", "A", "cache-dependency:A-A"]);
+    });
+
+    it("should clear AB", async () => {
+      await service.createCacheDependencies((graph: CacheDependencyGraph) => {
+        graph.addNode("A", 1);
+        graph.addNode("B", 2);
+        graph.addNode("AB", [1, 2]);
+        graph.addDependency("A", "AB");
+        graph.addDependency("B", "AB");
+      });
+
+      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:B", "B", "cache-dependency:A", "A", "AB"]);
+
+      await service.clearCacheDependencies("AB");
+
+      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:B", "B", "cache-dependency:A", "A"]);
     });
 
     it("should clear all", async () => {
