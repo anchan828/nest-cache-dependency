@@ -4,7 +4,6 @@ import { CacheDependencyGraph } from "../cache-dependency.interface";
 import { CacheDependencyModule } from "../cache-dependency.module";
 import { CacheDependencyService } from "../cache-dependency.service";
 import { CACHE_DEPENDENCY_PREFIX_CACHE_KEY } from "../constants";
-import { wait } from "../test.utils";
 interface Item {
   id: number;
   name: string;
@@ -39,7 +38,7 @@ export class ExampleService {
 
       for (const item of this.items) {
         graph.addNode(`item/${item.id}`, item);
-        graph.addDependency(cacheKey, `item/${item.id}`);
+        graph.addDependency(`item/${item.id}`, cacheKey);
 
         if (Array.isArray(item.nestItems)) {
           for (const nestItem of item.nestItems) {
@@ -148,11 +147,7 @@ describe("3. Nest dependency", () => {
       },
     ]);
 
-    await wait(1);
-
     await expect(cacheService.getKeys()).resolves.toEqual([
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}users/${userId}/items`,
-      `users/${userId}/items`,
       `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/4`,
       `item/4`,
       `item/4/nestItem/1`,
@@ -173,15 +168,12 @@ describe("3. Nest dependency", () => {
       `item/0`,
       `item/0/nestItem/1`,
       `item/0/nestItem/0`,
+      `users/${userId}/items`,
     ]);
 
     await service.deleteNestItem(userId, 2, 1);
 
-    await wait(500);
-
     await expect(cacheService.getKeys()).resolves.toEqual([
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}users/${userId}/items`,
-      `users/${userId}/items`,
       `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/4`,
       `item/4`,
       `item/4/nestItem/1`,

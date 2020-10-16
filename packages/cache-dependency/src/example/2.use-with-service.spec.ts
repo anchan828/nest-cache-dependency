@@ -1,10 +1,8 @@
-import { Injectable, Module } from "@nestjs/common";
+import { Injectable, Module, NotFoundException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { CacheDependencyGraph } from "../cache-dependency.interface";
 import { CacheDependencyModule } from "../cache-dependency.module";
 import { CacheDependencyService } from "../cache-dependency.service";
-import { CACHE_DEPENDENCY_PREFIX_CACHE_KEY } from "../constants";
-import { wait } from "../test.utils";
 interface Item {
   id: number;
   name: string;
@@ -31,17 +29,37 @@ export class ExampleService {
       graph.addNode(cacheKey, this.items);
 
       for (const item of this.items) {
-        graph.addNode(`item/${item.id}`, item);
-        graph.addDependency(cacheKey, `item/${item.id}`);
+        graph.addNode(`${cacheKey}/${item.id}`, item);
+        graph.addDependency(`${cacheKey}/${item.id}`, cacheKey);
       }
     });
 
     return this.items;
   }
 
-  public deleteItem(userId: number, itemId: number): void {
+  public async getItem(userId: number, itemId: number): Promise<Item> {
+    const cacheKey = `users/${userId}/items/${itemId}`;
+
+    const cache = await this.cacheService.getCache<Item>(cacheKey);
+
+    if (cache) {
+      return cache;
+    }
+
+    const item = this.items.find((item) => item.id === itemId);
+
+    if (!item) {
+      throw new NotFoundException();
+    }
+
+    await this.cacheService.setCache(cacheKey, item);
+
+    return item;
+  }
+
+  public async deleteItem(userId: number, itemId: number): Promise<void> {
     this.items = this.items.filter((item) => item.id !== itemId);
-    this.cacheService.clearCacheDependencies(`users/${userId}/items`);
+    await this.cacheService.clearCacheDependencies(`users/${userId}/items/${itemId}`);
   }
 }
 
@@ -59,9 +77,12 @@ describe("2. Use with Service", () => {
 
     const service = app.get<ExampleService>(ExampleService);
     const cacheService = app.get<CacheDependencyService>(CacheDependencyService);
-    const userId = Date.now();
 
-    await expect(service.getItems(userId)).resolves.toStrictEqual([
+    await expect(service.getItem(1000, 0)).resolves.toStrictEqual({ id: 0, name: "Item 0" });
+
+    await expect(cacheService.getKeys()).resolves.toEqual([`users/1000/items/0`]);
+
+    await expect(service.getItems(1000)).resolves.toStrictEqual([
       { id: 0, name: "Item 0" },
       { id: 1, name: "Item 1" },
       { id: 2, name: "Item 2" },
@@ -69,21 +90,31 @@ describe("2. Use with Service", () => {
       { id: 4, name: "Item 4" },
     ]);
 
-    await wait(1);
     await expect(cacheService.getKeys()).resolves.toEqual([
-      `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}users/${userId}/items`,
-      `users/${userId}/items`,
-      `item/4`,
-      `item/3`,
-      `item/2`,
-      `item/1`,
-      `item/0`,
+      "cache-dependency:users/1000/items/4",
+      "users/1000/items/4",
+      "cache-dependency:users/1000/items/3",
+      "users/1000/items/3",
+      "cache-dependency:users/1000/items/2",
+      "users/1000/items/2",
+      "cache-dependency:users/1000/items/1",
+      "users/1000/items/1",
+      "cache-dependency:users/1000/items/0",
+      "users/1000/items/0",
+      "users/1000/items",
     ]);
 
-    await service.deleteItem(userId, 2);
+    await service.deleteItem(1000, 2);
 
-    await wait(500);
-
-    await expect(cacheService.getKeys()).resolves.toEqual([]);
+    await expect(cacheService.getKeys()).resolves.toEqual([
+      "cache-dependency:users/1000/items/4",
+      "users/1000/items/4",
+      "cache-dependency:users/1000/items/3",
+      "users/1000/items/3",
+      "cache-dependency:users/1000/items/1",
+      "users/1000/items/1",
+      "cache-dependency:users/1000/items/0",
+      "users/1000/items/0",
+    ]);
   });
 });

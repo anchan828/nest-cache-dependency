@@ -5,6 +5,7 @@ import {
   Get,
   Injectable,
   Module,
+  NotFoundException,
   Param,
   ParseIntPipe,
   UseInterceptors,
@@ -16,7 +17,6 @@ import { ClearCacheDependencies } from "../cache-dependency.decorator";
 import { CacheDependencyInterceptor } from "../cache-dependency.interceptor";
 import { CacheDependencyModule } from "../cache-dependency.module";
 import { CacheDependencyService } from "../cache-dependency.service";
-import { wait } from "../test.utils";
 interface Item {
   id: number;
   name: string;
@@ -32,7 +32,17 @@ export class ExampleService {
     return this.items;
   }
 
-  public deleteItem(itemId: number): void {
+  public getItem(userId: number, itemId: number): Item {
+    const item = this.items.find((item) => item.id === itemId);
+
+    if (!item) {
+      throw new NotFoundException();
+    }
+
+    return item;
+  }
+
+  public deleteItem(userId: number, itemId: number): void {
     this.items = this.items.filter((item) => item.id !== itemId);
   }
 }
@@ -45,20 +55,29 @@ export class ExampleController {
   @Get("users/:userId/items")
   @CacheKey("users/:userId/items")
   @CacheDependency<Item[]>((cacheKey: string, items: Item[], graph: CacheDependencyGraph) => {
-    graph.addNode(cacheKey);
     for (const item of items) {
-      graph.addNode(`item/${item.id}`, item);
-      graph.addDependency(cacheKey, `item/${item.id}`);
+      // e.g. users/1/items/2
+      graph.addNode(`${cacheKey}/${item.id}`, item);
+      graph.addDependency(`${cacheKey}/${item.id}`, cacheKey);
     }
   })
   public getItems(): Item[] {
     return this.service.getItems();
   }
 
+  @Get("users/:userId/items/:itemId")
+  @CacheKey("users/:userId/items/:itemId")
+  public getItem(@Param("userId", ParseIntPipe) userId: number, @Param("itemId", ParseIntPipe) itemId: number): Item {
+    return this.service.getItem(userId, itemId);
+  }
+
   @Delete("users/:userId/items/:itemId")
-  @ClearCacheDependencies("users/:userId/items")
-  public deleteItem(@Param("itemId", ParseIntPipe) itemId: number): void {
-    this.service.deleteItem(itemId);
+  @ClearCacheDependencies("users/:userId/items/:itemId")
+  public deleteItem(
+    @Param("userId", ParseIntPipe) userId: number,
+    @Param("itemId", ParseIntPipe) itemId: number,
+  ): void {
+    this.service.deleteItem(userId, itemId);
   }
 }
 
@@ -81,9 +100,16 @@ describe("1. Use with Controller", () => {
 
     const app = await module.createNestApplication().init();
     const service = app.get<CacheDependencyService>(CacheDependencyService);
-    const userId = Date.now();
+
+    await request(app.getHttpServer()).get(`/users/1000/items/0`).expect(200).expect({ id: 0, name: "Item 0" });
+
+    await expect(service.getKeys()).resolves.toEqual(["users/1000/items/0"]);
+
+    // cache
+    await request(app.getHttpServer()).get(`/users/1000/items/0`).expect(200).expect({ id: 0, name: "Item 0" });
+
     await request(app.getHttpServer())
-      .get(`/users/${userId}/items`)
+      .get(`/users/1000/items`)
       .expect(200)
       .expect([
         { id: 0, name: "Item 0" },
@@ -93,23 +119,32 @@ describe("1. Use with Controller", () => {
         { id: 4, name: "Item 4" },
       ]);
 
-    await wait(1);
-
     await expect(service.getKeys()).resolves.toEqual([
-      `cache-dependency:users/${userId}/items`,
-      `users/${userId}/items`,
-      `item/4`,
-      `item/3`,
-      `item/2`,
-      `item/1`,
-      `item/0`,
+      "cache-dependency:users/1000/items/4",
+      "users/1000/items/4",
+      "cache-dependency:users/1000/items/3",
+      "users/1000/items/3",
+      "cache-dependency:users/1000/items/2",
+      "users/1000/items/2",
+      "cache-dependency:users/1000/items/1",
+      "users/1000/items/1",
+      "cache-dependency:users/1000/items/0",
+      "users/1000/items/0",
+      `users/1000/items`,
     ]);
 
-    await request(app.getHttpServer()).delete(`/users/${userId}/items/2`).expect(200).expect({});
+    await request(app.getHttpServer()).delete(`/users/1000/items/2`).expect(200).expect({});
 
-    await wait(500);
-
-    await expect(service.getKeys()).resolves.toEqual([]);
+    await expect(service.getKeys()).resolves.toEqual([
+      "cache-dependency:users/1000/items/4",
+      "users/1000/items/4",
+      "cache-dependency:users/1000/items/3",
+      "users/1000/items/3",
+      "cache-dependency:users/1000/items/1",
+      "users/1000/items/1",
+      "cache-dependency:users/1000/items/0",
+      "users/1000/items/0",
+    ]);
 
     await app.close();
   });
