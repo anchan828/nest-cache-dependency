@@ -40,8 +40,9 @@ export class ExampleController {
   @CacheKey("users/:userId/items")
   @CacheDependency<Item[]>((cacheKey: string, items: Item[], graph: CacheDependencyGraph) => {
     for (const item of items) {
-      graph.addNode(`item/${item.id}`, item);
-      graph.addDependency(cacheKey, `item/${item.id}`);
+      // e.g. users/1/items/2
+      graph.addNode(`${cacheKey}/${item.id}`, item);
+      graph.addDependency(`${cacheKey}/${item.id}`, cacheKey);
     }
   })
   public getItems(): Item[] {
@@ -49,7 +50,7 @@ export class ExampleController {
   }
 
   @Delete("users/:userId/items/:itemId")
-  @ClearCacheDependencies("users/:userId/items")
+  @ClearCacheDependencies("users/:userId/items/:itemId")
   public deleteItem(@Param("itemId", ParseIntPipe) itemId: number): void {
     this.service.deleteItem(itemId);
   }
@@ -80,8 +81,8 @@ export class ExampleService {
       graph.addNode(cacheKey, this.items);
 
       for (const item of this.items) {
-        graph.addNode(`item/${item.id}`, item);
-        graph.addDependency(cacheKey, `item/${item.id}`);
+        graph.addNode(`${cacheKey}/${item.id}`, item);
+        graph.addDependency(`${cacheKey}/${item.id}`, cacheKey);
       }
     });
 
@@ -90,7 +91,7 @@ export class ExampleService {
 
   public deleteItem(userId: number, itemId: number): void {
     this.items = this.items.filter(item => item.id !== itemId);
-    this.cacheService.clearCacheDependencies(`users/${userId}/items`);
+    this.cacheService.clearCacheDependencies(`users/${userId}/items/${itemId}`);
   }
 }
 ```
