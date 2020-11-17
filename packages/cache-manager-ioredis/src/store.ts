@@ -97,7 +97,7 @@ class RedisStore implements CacheManager {
     }
   }
 
-  public async mget<T>(keys: string[]): Promise<Array<T | undefined>> {
+  public async mget<T>(...keys: string[]): Promise<Array<T | undefined>> {
     const results = (await this.redisCache.mget(...keys)) as Array<string | undefined>;
     return results.map((result) => parseJSON<T>(result));
   }

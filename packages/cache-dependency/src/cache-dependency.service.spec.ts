@@ -27,39 +27,80 @@ describe("CacheDependencyService", () => {
   it("should be defined", () => {
     expect(service).toBeDefined();
   });
-  describe("getCache/setCache/deleteCache", () => {
+  describe("get/set/delete", () => {
     it("should be defined", () => {
       expect(service.getCache).toBeDefined();
       expect(service.setCache).toBeDefined();
       expect(service.deleteCache).toBeDefined();
+      expect(service.get).toBeDefined();
+      expect(service.set).toBeDefined();
+      expect(service.delete).toBeDefined();
+    });
+
+    it("should call deprecated functions", async () => {
+      await expect(service.getCache("test")).resolves.toBeUndefined();
+      await expect(service.setCache("test", "value")).resolves.toBeUndefined();
+      await expect(service.deleteCache("test")).resolves.toBeUndefined();
     });
 
     it("test", async () => {
-      await expect(service.getCache("test")).resolves.toBeUndefined();
-      await service.setCache("test", 1);
-      await expect(service.getCache("test")).resolves.toBe(1);
-      await service.deleteCache("test");
-      await expect(service.getCache("test")).resolves.toBeUndefined();
+      await expect(service.get("test")).resolves.toBeUndefined();
+      await service.set("test", 1);
+      await expect(service.get("test")).resolves.toBe(1);
+      await service.delete("test");
+      await expect(service.get("test")).resolves.toBeUndefined();
     });
 
     it("set ttl", async () => {
-      await expect(service.getCache("test")).resolves.toBeUndefined();
-      await service.setCache("test", 1, 1);
-      await expect(service.getCache("test")).resolves.toBe(1);
+      await expect(service.get("test")).resolves.toBeUndefined();
+      await service.set("test", 1, 1);
+      await expect(service.get("test")).resolves.toBe(1);
       await wait(2000);
-      await expect(service.getCache("test")).resolves.toBeUndefined();
+      await expect(service.get("test")).resolves.toBeUndefined();
     });
 
     it("set date object", async () => {
       const date = new Date();
-      await expect(service.getCache("test")).resolves.toBeUndefined();
-      await service.setCache("test", { date });
-      await expect(service.getCache("test")).resolves.toEqual({ date });
+      await expect(service.get("test")).resolves.toBeUndefined();
+      await service.set("test", { date });
+      await expect(service.get("test")).resolves.toEqual({ date });
     });
 
     it("shouldn't set undefined value", async () => {
-      await expect(service.getCache("test")).resolves.toBeUndefined();
-      await service.setCache("test", undefined);
+      await expect(service.get("test")).resolves.toBeUndefined();
+      await service.set("test", undefined);
+    });
+  });
+
+  describe("mget", () => {
+    it("should get caches", async () => {
+      await expect(service.mget(["key1", "key2"])).resolves.toEqual({
+        key1: undefined,
+        key2: undefined,
+      });
+
+      await service.set("key1", "value1");
+
+      await expect(service.mget(["key1", "key2"])).resolves.toEqual({
+        key1: "value1",
+        key2: undefined,
+      });
+    });
+  });
+
+  describe("mset", () => {
+    it("should get caches", async () => {
+      await expect(service.mget(["key1", "key2"])).resolves.toEqual({
+        key1: undefined,
+        key2: undefined,
+      });
+
+      await service.mset({ key1: "value1" });
+
+      await expect(service.mget(["key1", "key2"])).resolves.toEqual({
+        key1: "value1",
+        key2: undefined,
+      });
     });
   });
 

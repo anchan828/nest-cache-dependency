@@ -121,18 +121,22 @@ describe("RedisStore", () => {
   });
 
   it("should mget", async () => {
-    const keys = ["key1", "key2", "key3"];
-    for (const key of keys) {
+    for (const key of ["key1", "key2", "key4"]) {
       await store.set(key, `${key}:value`);
     }
 
-    await expect(store.mget(keys)).resolves.toEqual(["key1:value", "key2:value", "key3:value"]);
+    await expect(store.mget(...["key1", "key2", "key3", "key4"])).resolves.toEqual([
+      "key1:value",
+      "key2:value",
+      undefined,
+      "key4:value",
+    ]);
   });
 
   it("should mset", async () => {
     await store.mset("key1", "key1:value", "key2", "key2:value", "key3", "key3:value");
 
-    await expect(store.mget(["key1", "key2", "key3"])).resolves.toEqual(["key1:value", "key2:value", "key3:value"]);
+    await expect(store.mget(...["key1", "key2", "key3"])).resolves.toEqual(["key1:value", "key2:value", "key3:value"]);
   });
 });
 
