@@ -10,6 +10,10 @@ export type CacheManager = CacheStore & {
   keys(pattern?: string): Promise<string[]>;
   reset(): Promise<void>;
   mget<T>(...keys: string[]): Promise<Array<T | undefined>>;
-  mset<T>(...keyOrValues: Array<string | T>): Promise<void>;
+
+  /**
+   * You can set options to last argument
+   */
+  mset<T>(...keyOrValues: Array<string | T | CacheManagerSetOptions>): Promise<void>;
   del(...keys: string[]): Promise<void>;
 };

@@ -114,7 +114,7 @@ describe("CacheDependencyService", () => {
         graph.addDependency("A", "A-B");
       });
 
-      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:A", "A", "A-B", "A-A"]);
+      await expect(service.getKeys()).resolves.toEqual(["A", "A-A", "A-B", "cache-dependency:A"]);
 
       await service.clearCacheDependencies("A");
 
@@ -132,11 +132,11 @@ describe("CacheDependencyService", () => {
         graph.addDependency("A", "A-B");
       });
 
-      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:A", "A", "cache-dependency:A-A"]);
+      await expect(service.getKeys()).resolves.toEqual(["A", "cache-dependency:A", "cache-dependency:A-A"]);
 
       await service.clearCacheDependencies("A-A-A");
 
-      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:A", "A", "cache-dependency:A-A"]);
+      await expect(service.getKeys()).resolves.toEqual(["A", "cache-dependency:A", "cache-dependency:A-A"]);
     });
 
     it("should clear AB", async () => {
@@ -148,11 +148,11 @@ describe("CacheDependencyService", () => {
         graph.addDependency("B", "AB");
       });
 
-      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:B", "B", "cache-dependency:A", "A", "AB"]);
+      await expect(service.getKeys()).resolves.toEqual(["A", "AB", "B", "cache-dependency:A", "cache-dependency:B"]);
 
       await service.clearCacheDependencies("AB");
 
-      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:B", "B", "cache-dependency:A", "A"]);
+      await expect(service.getKeys()).resolves.toEqual(["A", "B", "cache-dependency:A", "cache-dependency:B"]);
     });
 
     it("should clear all", async () => {
@@ -170,31 +170,29 @@ describe("CacheDependencyService", () => {
       });
 
       await expect(service.getKeys()).resolves.toEqual([
-        "cache-dependency:A",
         "A",
-        "cache-dependency:A-B",
-        "A-B",
-        "cache-dependency:A-A",
         "A-A",
-        "cache-dependency:A-A-A",
         "A-A-A",
+        "A-B",
         "A-B-A",
+        "cache-dependency:A",
+        "cache-dependency:A-A",
+        "cache-dependency:A-A-A",
+        "cache-dependency:A-B",
       ]);
 
       await expect(service.getCacheDependencyKeys("A-A")).resolves.toEqual([
-        "A-B-A",
-        "cache-dependency:A-B-A",
-        "A-A-A",
-        "cache-dependency:A-A-A",
-        "A-B-A",
-        "cache-dependency:A-B-A",
         "A-A",
+        "A-A-A",
+        "A-B-A",
         "cache-dependency:A-A",
+        "cache-dependency:A-A-A",
+        "cache-dependency:A-B-A",
       ]);
 
       await service.clearCacheDependencies("A-A");
 
-      await expect(service.getKeys()).resolves.toEqual(["cache-dependency:A", "A", "cache-dependency:A-B", "A-B"]);
+      await expect(service.getKeys()).resolves.toEqual(["A", "A-B", "cache-dependency:A", "cache-dependency:A-B"]);
     });
   });
 });

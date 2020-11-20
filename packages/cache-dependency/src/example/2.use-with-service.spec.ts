@@ -91,30 +91,30 @@ describe("2. Use with Service", () => {
     ]);
 
     await expect(cacheService.getKeys()).resolves.toEqual([
-      "cache-dependency:users/1000/items/4",
-      "users/1000/items/4",
-      "cache-dependency:users/1000/items/3",
-      "users/1000/items/3",
-      "cache-dependency:users/1000/items/2",
-      "users/1000/items/2",
-      "cache-dependency:users/1000/items/1",
-      "users/1000/items/1",
       "cache-dependency:users/1000/items/0",
-      "users/1000/items/0",
+      "cache-dependency:users/1000/items/1",
+      "cache-dependency:users/1000/items/2",
+      "cache-dependency:users/1000/items/3",
+      "cache-dependency:users/1000/items/4",
       "users/1000/items",
+      "users/1000/items/0",
+      "users/1000/items/1",
+      "users/1000/items/2",
+      "users/1000/items/3",
+      "users/1000/items/4",
     ]);
 
     await service.deleteItem(1000, 2);
 
     await expect(cacheService.getKeys()).resolves.toEqual([
-      "cache-dependency:users/1000/items/4",
-      "users/1000/items/4",
-      "cache-dependency:users/1000/items/3",
-      "users/1000/items/3",
-      "cache-dependency:users/1000/items/1",
-      "users/1000/items/1",
       "cache-dependency:users/1000/items/0",
+      "cache-dependency:users/1000/items/1",
+      "cache-dependency:users/1000/items/3",
+      "cache-dependency:users/1000/items/4",
       "users/1000/items/0",
+      "users/1000/items/1",
+      "users/1000/items/3",
+      "users/1000/items/4",
     ]);
   });
 });
