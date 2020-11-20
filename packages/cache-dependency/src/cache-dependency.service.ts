@@ -143,7 +143,7 @@ export class CacheDependencyService {
    * @memberof CacheDependencyService
    */
   public async getKeys(pattern?: string): Promise<string[]> {
-    return this.cacheManager.keys(pattern);
+    return (await this.cacheManager.keys(pattern)).sort();
   }
 
   /**
@@ -161,25 +161,40 @@ export class CacheDependencyService {
       graph = g;
     }
 
+    const values: (string | any)[] = [];
+    const ttlValues: (string | any)[] = [];
+    const dependenciesCacheKeys: Record<string, string[]> = {};
     const keys = graph.overallOrder();
     for (const key of keys) {
       const data = graph.getNodeData(key);
 
       if (data && data !== key) {
-        await this.set(key, data);
+        values.push(key, data);
       }
 
       const dependencies = graph.dependenciesOf(key);
       const dependenciesCacheKey = createDependenciesCacheKey(key);
-      let value = (await this.get<string[]>(dependenciesCacheKey)) as string[];
-      if (!Array.isArray(value)) {
-        value = [];
-      }
+      dependenciesCacheKeys[dependenciesCacheKey] = dependencies;
+    }
 
-      const newValues = Array.from(new Set([...value, ...dependencies]));
-      if (newValues.length !== 0 && !this.arrayEquals(value, newValues)) {
-        await this.set(dependenciesCacheKey, newValues, Number.MAX_SAFE_INTEGER);
+    const dependenciesCacheKeyValues = await this.mget<string[]>(Object.keys(dependenciesCacheKeys));
+
+    for (const entry of Object.entries(dependenciesCacheKeyValues)) {
+      if (!Array.isArray(entry[1])) {
+        entry[1] = [];
       }
+      const newValues = Array.from(new Set([...entry[1], ...dependenciesCacheKeys[entry[0]]]));
+      if (newValues.length !== 0 && !this.arrayEquals(entry[1], newValues)) {
+        ttlValues.push(entry[0], newValues);
+      }
+    }
+
+    if (values.length !== 0) {
+      await this.cacheManager.mset<any>(...values);
+    }
+
+    if (ttlValues.length !== 0) {
+      await this.cacheManager.mset<any>(...ttlValues, { options: { ttl: Number.MAX_SAFE_INTEGER } });
     }
   }
 
@@ -200,8 +215,10 @@ export class CacheDependencyService {
         dependencyKeys.push(...(await this.getCacheDependencyKeys(value)));
       }
     }
+
     dependencyKeys.push(key, dependenciesCacheKey);
-    return dependencyKeys;
+
+    return Array.from(new Set(dependencyKeys)).sort();
   }
 
   /**

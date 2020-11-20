@@ -2,7 +2,7 @@
   "name": "@anchan828/nest-cache-packages",
   "private": true,
   "version": "0.0.0",
-  "description": "The [Bull](https://github.com/OptimalBits/bull) module for [Nest](https://github.com/nestjs/nest).",
+  "description": "The cache module for [Nest](https://github.com/nestjs/nest).",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -35,7 +35,7 @@
     "@nestjs/platform-express": "7.5.4",
     "@nestjs/testing": "7.5.4",
     "@types/jest": "26.0.15",
-    "@types/node": "11.15.37",
+    "@types/node": "14.14.9",
     "@types/supertest": "2.0.10",
     "@typescript-eslint/eslint-plugin": "4.8.1",
     "@typescript-eslint/parser": "4.8.1",

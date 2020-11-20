@@ -120,30 +120,30 @@ describe("1. Use with Controller", () => {
       ]);
 
     await expect(service.getKeys()).resolves.toEqual([
-      "cache-dependency:users/1000/items/4",
-      "users/1000/items/4",
-      "cache-dependency:users/1000/items/3",
-      "users/1000/items/3",
-      "cache-dependency:users/1000/items/2",
-      "users/1000/items/2",
-      "cache-dependency:users/1000/items/1",
-      "users/1000/items/1",
       "cache-dependency:users/1000/items/0",
-      "users/1000/items/0",
+      "cache-dependency:users/1000/items/1",
+      "cache-dependency:users/1000/items/2",
+      "cache-dependency:users/1000/items/3",
+      "cache-dependency:users/1000/items/4",
       `users/1000/items`,
+      "users/1000/items/0",
+      "users/1000/items/1",
+      "users/1000/items/2",
+      "users/1000/items/3",
+      "users/1000/items/4",
     ]);
 
     await request(app.getHttpServer()).delete(`/users/1000/items/2`).expect(200).expect({});
 
     await expect(service.getKeys()).resolves.toEqual([
-      "cache-dependency:users/1000/items/4",
-      "users/1000/items/4",
-      "cache-dependency:users/1000/items/3",
-      "users/1000/items/3",
-      "cache-dependency:users/1000/items/1",
-      "users/1000/items/1",
       "cache-dependency:users/1000/items/0",
+      "cache-dependency:users/1000/items/1",
+      "cache-dependency:users/1000/items/3",
+      "cache-dependency:users/1000/items/4",
       "users/1000/items/0",
+      "users/1000/items/1",
+      "users/1000/items/3",
+      "users/1000/items/4",
     ]);
 
     await app.close();
