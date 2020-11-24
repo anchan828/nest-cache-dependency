@@ -44,6 +44,7 @@ describe("CacheDependencyService", () => {
     });
 
     it("test", async () => {
+      await service.delete();
       await expect(service.get("test")).resolves.toBeUndefined();
       await service.set("test", 1);
       await expect(service.get("test")).resolves.toBe(1);
@@ -74,6 +75,8 @@ describe("CacheDependencyService", () => {
 
   describe("mget", () => {
     it("should get caches", async () => {
+      await expect(service.mget([])).resolves.toEqual({});
+
       await expect(service.mget(["key1", "key2"])).resolves.toEqual({
         key1: undefined,
         key2: undefined,
@@ -90,6 +93,8 @@ describe("CacheDependencyService", () => {
 
   describe("mset", () => {
     it("should get caches", async () => {
+      await service.mset({});
+
       await expect(service.mget(["key1", "key2"])).resolves.toEqual({
         key1: undefined,
         key2: undefined,
