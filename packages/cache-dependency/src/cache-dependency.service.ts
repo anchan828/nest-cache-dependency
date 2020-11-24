@@ -74,6 +74,10 @@ export class CacheDependencyService {
    * @memberof CacheDependencyService
    */
   public async mget<T>(keys: string[]): Promise<Record<string, T | undefined>> {
+    if (keys.length === 0) {
+      return {};
+    }
+
     const result: Record<string, T | undefined> = {};
     const caches = await this.cacheManager.mget<T>(...keys);
     for (let i = 0; i < keys.length; i++) {
@@ -97,6 +101,10 @@ export class CacheDependencyService {
       if (value !== undefined) {
         keyOrValues.push(key, value);
       }
+    }
+
+    if (keyOrValues.length === 0) {
+      return;
     }
 
     await this.cacheManager.mset<T>(...keyOrValues);
@@ -132,6 +140,10 @@ export class CacheDependencyService {
    * @memberof CacheDependencyService
    */
   public async delete(...keys: string[]): Promise<void> {
+    if (keys.length === 0) {
+      return;
+    }
+
     await this.cacheManager.del(...keys);
   }
 
