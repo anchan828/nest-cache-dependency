@@ -120,7 +120,12 @@ export class CacheDependencyService {
    */
   public async set(key: string, value: unknown, ttl?: number): Promise<void> {
     if (!value) {
-      this.logger.debug(`cache manager don't store 'value' because 'value' is undefined.`);
+      this.logger.debug(`cache manager doesn't store 'value' because 'value' is undefined.`);
+      return;
+    }
+
+    if (typeof key !== "string") {
+      this.logger.debug(`cache manager doesn't store 'value' because 'key' is undefined.`);
       return;
     }
 
@@ -178,10 +183,10 @@ export class CacheDependencyService {
     const dependenciesCacheKeys: Record<string, string[]> = {};
     const keys = graph.overallOrder();
     for (const key of keys) {
-      const data = graph.getNodeData(key);
+      const value = graph.getNodeData(key);
 
-      if (data && data !== key) {
-        values.push(key, data);
+      if (value && typeof key === "string" && value !== key) {
+        values.push(key, value);
       }
 
       const dependencies = graph.dependenciesOf(key);
@@ -197,7 +202,9 @@ export class CacheDependencyService {
       }
       const newValues = Array.from(new Set([...entry[1], ...dependenciesCacheKeys[entry[0]]]));
       if (newValues.length !== 0 && !this.arrayEquals(entry[1], newValues)) {
-        ttlValues.push(entry[0], newValues);
+        if (typeof entry[0] === "string") {
+          ttlValues.push(entry[0], newValues);
+        }
       }
     }
 

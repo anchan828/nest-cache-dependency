@@ -70,6 +70,13 @@ describe("CacheDependencyService", () => {
     it("shouldn't set undefined value", async () => {
       await expect(service.get("test")).resolves.toBeUndefined();
       await service.set("test", undefined);
+      await expect(service.get("test")).resolves.toBeUndefined();
+    });
+
+    it("shouldn't set non string key", async () => {
+      await expect(service.get("test")).resolves.toBeUndefined();
+      await service.set({ obj: "key" } as any, "value");
+      await expect(service.get({ obj: "key" } as any)).resolves.toBeUndefined();
     });
   });
 
