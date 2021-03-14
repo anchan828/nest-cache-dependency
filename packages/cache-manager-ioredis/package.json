@@ -28,7 +28,7 @@
   "dependencies": {
     "@anchan828/nest-cache-common": "^0.3.22",
     "cache-manager": "3.4.1",
-    "ioredis": "4.23.0"
+    "ioredis": "4.24.1"
   },
   "devDependencies": {
     "@types/cache-manager": "3.4.0",
