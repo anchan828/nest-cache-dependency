@@ -26,6 +26,6 @@
   },
   "homepage": "https://github.com/anchan828/nest-cache-dependency#readme",
   "devDependencies": {
-    "cache-manager": "3.4.2"
+    "cache-manager": "3.4.3"
   }
 }
