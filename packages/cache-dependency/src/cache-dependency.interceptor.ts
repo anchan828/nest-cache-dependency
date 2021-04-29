@@ -26,7 +26,7 @@ export class CacheDependencyInterceptor implements NestInterceptor {
 
     if (cacheKey) {
       cacheKey = this.applyCacheKeyParams(cacheKey, params);
-      const value = await this.service.getCache(cacheKey);
+      const value = await this.service.get(cacheKey);
       if (value) {
         return of(value);
       }
@@ -37,7 +37,7 @@ export class CacheDependencyInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap(async (response) => {
         if (cacheKey && !func) {
-          await this.service.setCache(cacheKey, response);
+          await this.service.set(cacheKey, response);
         }
         if (func) {
           const graph = new DepGraph<any>({ circular: true });
