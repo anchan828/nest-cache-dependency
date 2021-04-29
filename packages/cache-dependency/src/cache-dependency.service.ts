@@ -4,7 +4,6 @@ import { DepGraph } from "dependency-graph";
 import { CacheDependencyGraph, CreateCacheDependencyFunction } from "./cache-dependency.interface";
 import { createDependenciesCacheKey } from "./cache-dependency.utils";
 import { CACHE_DEPENDENCY_MODULE } from "./constants";
-
 /**
  * Access to cache manager and dependency
  *
@@ -200,10 +199,10 @@ export class CacheDependencyService {
       if (!Array.isArray(entry[1])) {
         entry[1] = [];
       }
-      const newValues = Array.from(new Set([...entry[1], ...dependenciesCacheKeys[entry[0]]]));
-      if (newValues.length !== 0 && !this.arrayEquals(entry[1], newValues)) {
+      const newDependenciesCacheKeys = Array.from(new Set([...entry[1], ...dependenciesCacheKeys[entry[0]]]));
+      if (newDependenciesCacheKeys.length !== 0 && !this.stringArrayEquals(entry[1], newDependenciesCacheKeys)) {
         if (typeof entry[0] === "string") {
-          ttlValues.push(entry[0], newValues);
+          ttlValues.push(entry[0], newDependenciesCacheKeys);
         }
       }
     }
@@ -254,9 +253,9 @@ export class CacheDependencyService {
   }
 
   /**
-   * Is it the same array?
+   * Is it the same string array?
    */
-  private arrayEquals<T>(a: T[], b: T[]): boolean {
+  private stringArrayEquals(a: string[], b: string[]): boolean {
     return JSON.stringify(a.sort()) === JSON.stringify(b.sort());
   }
 }
