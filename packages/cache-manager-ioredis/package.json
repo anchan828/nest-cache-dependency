@@ -1,6 +1,6 @@
 {
   "name": "@anchan828/nest-cache-manager-ioredis",
-  "version": "0.3.29",
+  "version": "0.3.30",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/anchan828/nest-cache-dependency#readme",
   "dependencies": {
-    "@anchan828/nest-cache-common": "^0.3.29",
+    "@anchan828/nest-cache-common": "^0.3.30",
     "cache-manager": "3.4.3",
     "ioredis": "4.27.1"
   },
