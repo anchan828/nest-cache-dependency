@@ -118,13 +118,15 @@ describe("CacheDependencyService", () => {
 
   describe("dependency", () => {
     it("should clear A and A-A", async () => {
-      await service.createCacheDependencies((graph: CacheDependencyGraph) => {
-        graph.addNode("A", 1);
-        graph.addNode("A-A", 1);
-        graph.addNode("A-B", 1);
-        graph.addDependency("A", "A-A");
-        graph.addDependency("A", "A-B");
-      });
+      const graph = service.createGraph();
+
+      graph.addNode("A", 1);
+      graph.addNode("A-A", 1);
+      graph.addNode("A-B", 1);
+      graph.addDependency("A", "A-A");
+      graph.addDependency("A", "A-B");
+
+      await service.createCacheDependencies(graph);
 
       await expect(service.getKeys()).resolves.toEqual(["A", "A-A", "A-B", "cache-dependency:A"]);
 

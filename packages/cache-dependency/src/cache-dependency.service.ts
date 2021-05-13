@@ -163,6 +163,16 @@ export class CacheDependencyService {
   }
 
   /**
+   * Create graph object
+   *
+   * @return {*}  {CacheDependencyGraph}
+   * @memberof CacheDependencyService
+   */
+  public createGraph(): CacheDependencyGraph {
+    return new DepGraph<any>();
+  }
+
+  /**
    * Create dependency graph.
    * If node has data, save it.
    *
