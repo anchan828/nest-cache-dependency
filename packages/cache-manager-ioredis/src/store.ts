@@ -17,11 +17,11 @@ class RedisStore implements CacheManager {
     }
 
     if (args.enabledInMemory) {
-      this.memoryStore = (caching({
+      this.memoryStore = caching({
         store: "memory",
         max: Number.MAX_SAFE_INTEGER,
         ttl: args.inMemoryTTL || 5,
-      }) as unknown) as CacheManager;
+      }) as unknown as CacheManager;
     }
     this.redisCache = new Redis(args);
   }
@@ -84,7 +84,7 @@ class RedisStore implements CacheManager {
     if (!Array.isArray(keys)) {
       return [];
     }
-    return keys;
+    return keys.sort();
   }
 
   public async reset(): Promise<void> {

@@ -6,11 +6,11 @@ describe("RedisStore", () => {
   let store: CacheManager;
   let redis: Redis.Redis;
   beforeEach(async () => {
-    store = (caching({
+    store = caching({
       store: redisStore,
       host: process.env.REDIS_HOST || "localhost",
       ttl: 5,
-    } as any) as any) as CacheManager;
+    } as any) as any as CacheManager;
     redis = (store as any).store.redisCache as Redis.Redis;
   });
 
@@ -23,10 +23,10 @@ describe("RedisStore", () => {
   });
 
   it("should set cache", async () => {
-    store = (caching({
+    store = caching({
       store: redisStore,
       host: process.env.REDIS_HOST || "localhost",
-    } as any) as any) as CacheManager;
+    } as any) as any as CacheManager;
     const key = "test";
     await store.set(key, {
       id: 1,
@@ -107,13 +107,13 @@ describe("RedisStore", () => {
   });
 
   it("should change key prefix", async () => {
-    store = (caching({
+    store = caching({
       store: redisStore,
       host: process.env.REDIS_HOST || "localhost",
       ttl: 10,
       db: 2,
       keyPrefix: "changed:",
-    } as any) as any) as CacheManager;
+    } as any) as any as CacheManager;
     const key = "key";
     await store.set(key, key);
     const results = await store.keys();
@@ -135,13 +135,13 @@ describe("RedisStore", () => {
 
   it("should mset", async () => {
     await store.mset("key1", "key1:value", "key2", "key2:value", "key3", "key3:value");
-    await expect(store.keys()).resolves.toEqual(["cache:key1", "cache:key3", "cache:key2"]);
+    await expect(store.keys()).resolves.toEqual(["cache:key1", "cache:key2", "cache:key3"]);
     await expect(store.mget(...["key1", "key2", "key3"])).resolves.toEqual(["key1:value", "key2:value", "key3:value"]);
   });
 
   it("should mset with options", async () => {
     await store.mset("key1", "key1:value", "key2", "key2:value", "key3", "key3:value", { ttl: "1234" });
-    await expect(store.keys()).resolves.toEqual(["cache:key1", "cache:key3", "cache:key2"]);
+    await expect(store.keys()).resolves.toEqual(["cache:key1", "cache:key2", "cache:key3"]);
     await expect(store.mget(...["key1", "key2", "key3"])).resolves.toEqual(["key1:value", "key2:value", "key3:value"]);
   });
 });
@@ -150,12 +150,12 @@ describe("In-memory cache", () => {
   let store: CacheManager;
 
   beforeEach(async () => {
-    store = (caching({
+    store = caching({
       store: redisStore,
       host: process.env.REDIS_HOST || "localhost",
       ttl: 5,
       enabledInMemory: true,
-    } as any) as any) as CacheManager;
+    } as any) as any as CacheManager;
 
     await store.reset();
   });
