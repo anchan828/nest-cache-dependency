@@ -17,11 +17,11 @@ class RedisStore implements CacheManager {
     }
 
     if (args.enabledInMemory) {
-      this.memoryStore = (caching({
+      this.memoryStore = caching({
         store: "memory",
         max: Number.MAX_SAFE_INTEGER,
         ttl: args.inMemoryTTL || 5,
-      }) as unknown) as CacheManager;
+      }) as unknown as CacheManager;
     }
     this.redisCache = new Redis(args);
   }
@@ -104,7 +104,9 @@ class RedisStore implements CacheManager {
 
   public async mset<T>(...keyOrValues: Array<string | T>): Promise<void> {
     for (let i = 0; i < keyOrValues.length; i += 2) {
-      await this.set(keyOrValues[i], keyOrValues[i + 1]);
+      if (keyOrValues.length !== i + 1) {
+        await this.set(keyOrValues[i], keyOrValues[i + 1]);
+      }
     }
   }
 }
