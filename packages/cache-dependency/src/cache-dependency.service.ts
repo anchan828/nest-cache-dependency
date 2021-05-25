@@ -1,4 +1,4 @@
-import { CacheManager, CacheManagerSetOptions } from "@anchan828/nest-cache-common";
+import { CacheManager, CacheManagerSetOptions, isNullOrUndefined } from "@anchan828/nest-cache-common";
 import { CACHE_MANAGER, Inject, Injectable, Logger } from "@nestjs/common";
 import { DepGraph } from "dependency-graph";
 import { CacheDependencyGraph, CreateCacheDependencyFunction } from "./cache-dependency.interface";
@@ -97,7 +97,7 @@ export class CacheDependencyService {
     const keyOrValues: (string | T)[] = [];
 
     for (const [key, value] of Object.entries(values)) {
-      if (value !== undefined) {
+      if (!isNullOrUndefined(value)) {
         keyOrValues.push(key, value);
       }
     }
@@ -118,7 +118,7 @@ export class CacheDependencyService {
    * @memberof CacheDependencyService
    */
   public async set(key: string, value: unknown, ttl?: number): Promise<void> {
-    if (!value) {
+    if (isNullOrUndefined(value)) {
       this.logger.debug(`cache manager doesn't store 'value' because 'value' is undefined.`);
       return;
     }
@@ -194,7 +194,7 @@ export class CacheDependencyService {
     for (const key of keys) {
       const value = graph.getNodeData(key);
 
-      if (value && typeof key === "string" && value !== key) {
+      if (!isNullOrUndefined(value) && typeof key === "string" && value !== key) {
         values.push(key, value);
       }
 

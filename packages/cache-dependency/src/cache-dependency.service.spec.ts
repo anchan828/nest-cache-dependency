@@ -46,6 +46,10 @@ describe("CacheDependencyService", () => {
     it("test", async () => {
       await service.delete();
       await expect(service.get("test")).resolves.toBeUndefined();
+      await service.set("test", 0);
+      await expect(service.get("test")).resolves.toBe(0);
+      await service.set("test", "");
+      await expect(service.get("test")).resolves.toBe("");
       await service.set("test", 1);
       await expect(service.get("test")).resolves.toBe(1);
       await service.delete("test");
