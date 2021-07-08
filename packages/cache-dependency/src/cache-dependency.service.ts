@@ -12,7 +12,7 @@ import { CACHE_DEPENDENCY_MODULE } from "./constants";
  */
 @Injectable()
 export class CacheDependencyService {
-  private readonly logger = new Logger(CACHE_DEPENDENCY_MODULE, true);
+  private readonly logger = new Logger(CACHE_DEPENDENCY_MODULE, { timestamp: true });
 
   constructor(
     @Inject(CACHE_MANAGER)
