@@ -32,6 +32,6 @@
   },
   "devDependencies": {
     "@types/cache-manager": "3.4.2",
-    "@types/ioredis": "4.26.5"
+    "@types/ioredis": "4.26.6"
   }
 }
