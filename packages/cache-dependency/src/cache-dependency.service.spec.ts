@@ -3,8 +3,9 @@ import { Test } from "@nestjs/testing";
 import { caching } from "cache-manager";
 import { CacheDependencyGraph } from "./cache-dependency.interface";
 import { CacheDependencyService } from "./cache-dependency.service";
+import { CACHE_DEPENDENCY_MODULE_OPTIONS } from "./constants";
 import { wait } from "./test.utils";
-describe("CacheDependencyService", () => {
+describe.each(["", "v1", "next", "dev"])("CacheDependencyService version: %s", (version: string) => {
   let service: CacheDependencyService;
   beforeEach(async () => {
     const app = await Test.createTestingModule({
@@ -17,6 +18,10 @@ describe("CacheDependencyService", () => {
             max: Number.MAX_SAFE_INTEGER,
             ttl: 1000,
           }),
+        },
+        {
+          provide: CACHE_DEPENDENCY_MODULE_OPTIONS,
+          useValue: { version },
         },
       ],
     }).compile();

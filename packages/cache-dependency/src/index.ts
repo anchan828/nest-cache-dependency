@@ -3,6 +3,9 @@ export { CacheDependencyInterceptor } from "./cache-dependency.interceptor";
 export {
   CacheDependencyFunction,
   CacheDependencyGraph,
+  CacheDependencyModuleAsyncOptions,
+  CacheDependencyModuleOptions,
+  CacheDependencyModuleOptionsFactory,
   CreateCacheDependencyFunction,
 } from "./cache-dependency.interface";
 export { CacheDependencyModule } from "./cache-dependency.module";
