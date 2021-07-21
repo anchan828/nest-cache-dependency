@@ -52,8 +52,7 @@ export class ExampleService {
     return this.items;
   }
 
-  public async deleteNestItem(userId: number, itemId: number, nestId: number): Promise<void> {
-    console.log(`delete nest item (${nestId}) cache`);
+  public async deleteNestItem(userId: number, itemId: number): Promise<void> {
     await this.cacheService.clearCacheDependencies(`item/${itemId}`);
   }
 }
@@ -171,7 +170,7 @@ describe("3. Nest dependency", () => {
       `users/${userId}/items`,
     ]);
 
-    await service.deleteNestItem(userId, 2, 1);
+    await service.deleteNestItem(userId, 2);
 
     await expect(cacheService.getKeys()).resolves.toEqual([
       `${CACHE_DEPENDENCY_PREFIX_CACHE_KEY}item/0`,

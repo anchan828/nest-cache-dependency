@@ -48,7 +48,7 @@ export class CacheDependencyModule {
     const providers: Provider[] = [...this.providers, ...this.createAsyncProviders(options)];
     return {
       module: CacheDependencyModule,
-      imports: [CacheModule.registerAsync(options)],
+      imports: [CacheModule.registerAsync(options), ...(options.imports || [])],
       providers,
       exports: providers,
     };

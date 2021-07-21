@@ -11,7 +11,7 @@
     "lint": "node ../../node_modules/eslint/bin/eslint --ignore-path ../../.eslintignore '**/*.ts'",
     "lint:fix": "npm run lint -- --fix",
     "watch": "node ../../node_modules/typescript/bin/tsc --watch",
-    "test": "node ../../node_modules/jest/bin/jest --coverage --runInBand --detectOpenHandles --forceExit",
+    "test": "node ../../node_modules/jest/bin/jest --coverage --runInBand --detectOpenHandles",
     "test:debug": "node --inspect-brk ../../node_modules/jest/bin/jest --runInBand --logHeapUsage",
     "test:watch": "npm run test -- --watch"
   },
