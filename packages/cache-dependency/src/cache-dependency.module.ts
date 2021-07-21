@@ -1,15 +1,10 @@
-import {
-  CacheModule,
-  CacheModuleAsyncOptions,
-  CacheOptionsFactory,
-  DynamicModule,
-  Global,
-  Module,
-  Provider,
-  Type,
-} from "@nestjs/common";
+import { CacheModule, DynamicModule, Global, Module, Provider, Type } from "@nestjs/common";
 import { CacheDependencyInterceptor } from "./cache-dependency.interceptor";
-import { CacheDependencyModuleOptions } from "./cache-dependency.interface";
+import {
+  CacheDependencyModuleAsyncOptions,
+  CacheDependencyModuleOptions,
+  CacheDependencyModuleOptionsFactory,
+} from "./cache-dependency.interface";
 import { CacheDependencyService } from "./cache-dependency.service";
 import { CACHE_DEPENDENCY_MODULE_OPTIONS } from "./constants";
 
@@ -45,11 +40,11 @@ export class CacheDependencyModule {
    * Configure the cache dependency dynamically.
    *
    * @static
-   * @param {CacheModuleAsyncOptions} options
+   * @param {CacheDependencyModuleAsyncOptions} options
    * @returns {DynamicModule}
    * @memberof CacheDependencyModule
    */
-  public static registerAsync(options: CacheModuleAsyncOptions): DynamicModule {
+  public static registerAsync(options: CacheDependencyModuleAsyncOptions): DynamicModule {
     const providers: Provider[] = [...this.providers, ...this.createAsyncProviders(options)];
     return {
       module: CacheDependencyModule,
@@ -59,7 +54,7 @@ export class CacheDependencyModule {
     };
   }
 
-  private static createAsyncProviders(options: CacheModuleAsyncOptions): Provider[] {
+  private static createAsyncProviders(options: CacheDependencyModuleAsyncOptions): Provider[] {
     if (options.useExisting || options.useFactory) {
       return [this.createAsyncOptionsProvider(options)];
     }
@@ -75,7 +70,7 @@ export class CacheDependencyModule {
     return asyncProviders;
   }
 
-  private static createAsyncOptionsProvider(options: CacheModuleAsyncOptions): Provider {
+  private static createAsyncOptionsProvider(options: CacheDependencyModuleAsyncOptions): Provider {
     if (options.useFactory) {
       return {
         provide: CACHE_DEPENDENCY_MODULE_OPTIONS,
@@ -84,7 +79,7 @@ export class CacheDependencyModule {
       };
     }
 
-    const injects: Type<CacheOptionsFactory>[] = [];
+    const injects: Type<CacheDependencyModuleOptionsFactory>[] = [];
     const inject = options.useExisting || options.useClass;
 
     if (inject) {
@@ -93,7 +88,7 @@ export class CacheDependencyModule {
 
     return {
       provide: CACHE_DEPENDENCY_MODULE_OPTIONS,
-      useFactory: async (optionsFactory: CacheOptionsFactory) => optionsFactory.createCacheOptions(),
+      useFactory: async (optionsFactory: CacheDependencyModuleOptionsFactory) => optionsFactory.createCacheOptions(),
       inject: injects,
     };
   }

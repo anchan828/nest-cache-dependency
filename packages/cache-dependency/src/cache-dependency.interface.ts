@@ -1,4 +1,4 @@
-import { CacheModuleOptions } from "@nestjs/common";
+import { CacheModuleOptions, ModuleMetadata, Provider, Type } from "@nestjs/common";
 import { DepGraph } from "dependency-graph";
 
 /**
@@ -10,10 +10,21 @@ export type CreateCacheDependencyFunction = (graph: CacheDependencyGraph) => voi
 
 export interface CacheDependencyModuleOptions extends CacheModuleOptions {
   /**
-   * Set version if you want to set prefix string as version
+   * Set if you want to set key to prefix string as version
    * e.g. {version}:key
    * @type {string}
    * @memberof CacheDependencyModuleOptions
    */
   cacheDependencyVersion?: string;
+}
+
+export interface CacheDependencyModuleOptionsFactory {
+  createCacheOptions(): Promise<CacheDependencyModuleOptions> | CacheDependencyModuleOptions;
+}
+export interface CacheDependencyModuleAsyncOptions extends Pick<ModuleMetadata, "imports"> {
+  useExisting?: Type<CacheDependencyModuleOptionsFactory>;
+  useClass?: Type<CacheDependencyModuleOptionsFactory>;
+  useFactory?: (...args: any[]) => Promise<CacheDependencyModuleOptions> | CacheDependencyModuleOptions;
+  inject?: any[];
+  extraProviders?: Provider[];
 }
