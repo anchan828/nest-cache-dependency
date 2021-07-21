@@ -16,6 +16,7 @@ describe("RedisStore", () => {
 
   afterEach(async () => {
     await redis.flushdb();
+    await redis.quit();
   });
 
   it("create cache instance", () => {
@@ -23,10 +24,6 @@ describe("RedisStore", () => {
   });
 
   it("should set cache", async () => {
-    store = caching({
-      store: redisStore,
-      host: process.env.REDIS_HOST || "localhost",
-    } as any) as any as CacheManager;
     const key = "test";
     await store.set(key, {
       id: 1,
@@ -107,7 +104,7 @@ describe("RedisStore", () => {
   });
 
   it("should change key prefix", async () => {
-    store = caching({
+    const store = caching({
       store: redisStore,
       host: process.env.REDIS_HOST || "localhost",
       ttl: 10,
@@ -118,6 +115,9 @@ describe("RedisStore", () => {
     await store.set(key, key);
     const results = await store.keys();
     expect(results.sort()).toEqual(["changed:key"]);
+
+    const redis = (store as any).store.redisCache as Redis.Redis;
+    await redis.quit();
   });
 
   it("should mget", async () => {
@@ -148,7 +148,7 @@ describe("RedisStore", () => {
 
 describe("In-memory cache", () => {
   let store: CacheManager;
-
+  let redis: Redis.Redis;
   beforeEach(async () => {
     store = caching({
       store: redisStore,
@@ -158,6 +158,12 @@ describe("In-memory cache", () => {
     } as any) as any as CacheManager;
 
     await store.reset();
+    redis = (store as any).store.redisCache as Redis.Redis;
+  });
+
+  afterEach(async () => {
+    await redis.flushdb();
+    await redis.quit();
   });
 
   it("should get from in-memory", async () => {
