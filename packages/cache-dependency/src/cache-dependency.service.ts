@@ -1,9 +1,13 @@
 import { CacheManager, CacheManagerSetOptions, isNullOrUndefined } from "@anchan828/nest-cache-common";
 import { CACHE_MANAGER, Inject, Injectable, Logger } from "@nestjs/common";
 import { DepGraph } from "dependency-graph";
-import { CacheDependencyGraph, CreateCacheDependencyFunction } from "./cache-dependency.interface";
+import {
+  CacheDependencyGraph,
+  CacheDependencyModuleOptions,
+  CreateCacheDependencyFunction,
+} from "./cache-dependency.interface";
 import { createDependenciesCacheKey } from "./cache-dependency.utils";
-import { CACHE_DEPENDENCY_MODULE } from "./constants";
+import { CACHE_DEPENDENCY_MODULE, CACHE_DEPENDENCY_MODULE_OPTIONS } from "./constants";
 /**
  * Access to cache manager and dependency
  *
@@ -12,11 +16,13 @@ import { CACHE_DEPENDENCY_MODULE } from "./constants";
  */
 @Injectable()
 export class CacheDependencyService {
-  private readonly logger = new Logger(CACHE_DEPENDENCY_MODULE, { timestamp: true });
+  private readonly logger = new Logger(CACHE_DEPENDENCY_MODULE);
 
   constructor(
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: CacheManager,
+    @Inject(CACHE_DEPENDENCY_MODULE_OPTIONS)
+    private readonly options: CacheDependencyModuleOptions,
   ) {}
 
   /**
@@ -62,7 +68,7 @@ export class CacheDependencyService {
    * @memberof CacheDependencyService
    */
   public async get<T>(key: string): Promise<T | undefined> {
-    return this.cacheManager.get<T>(key);
+    return this.cacheManager.get<T>(this.toKey(key));
   }
 
   /**
@@ -78,7 +84,7 @@ export class CacheDependencyService {
     }
 
     const result: Record<string, T | undefined> = {};
-    const caches = await this.cacheManager.mget<T>(...keys);
+    const caches = await this.cacheManager.mget<T>(...keys.map((k) => this.toKey(k)));
     for (let i = 0; i < keys.length; i++) {
       result[keys[i]] = caches[i];
     }
@@ -98,7 +104,7 @@ export class CacheDependencyService {
 
     for (const [key, value] of Object.entries(values)) {
       if (!isNullOrUndefined(value)) {
-        keyOrValues.push(key, value);
+        keyOrValues.push(this.toKey(key), value);
       }
     }
 
@@ -134,7 +140,7 @@ export class CacheDependencyService {
       options.ttl = ttl;
     }
 
-    await this.cacheManager.set(key, value, options);
+    await this.cacheManager.set(this.toKey(key), value, options);
   }
 
   /**
@@ -148,7 +154,7 @@ export class CacheDependencyService {
       return;
     }
 
-    await this.cacheManager.del(...keys);
+    await this.cacheManager.del(...keys.map((k) => this.toKey(k)));
   }
 
   /**
@@ -159,7 +165,13 @@ export class CacheDependencyService {
    * @memberof CacheDependencyService
    */
   public async getKeys(pattern?: string): Promise<string[]> {
-    return (await this.cacheManager.keys(pattern)).sort();
+    return (await this.cacheManager.keys(pattern))
+      .sort()
+      .map((k) =>
+        this.options.cacheDependencyVersion
+          ? k.replace(new RegExp(`^(${this.options.cacheDependencyVersion}?):`), "")
+          : k,
+      );
   }
 
   /**
@@ -218,11 +230,13 @@ export class CacheDependencyService {
     }
 
     if (values.length !== 0) {
-      await this.cacheManager.mset<any>(...values);
+      await this.cacheManager.mset<any>(...this.toKeyOrValues(values));
     }
 
     if (ttlValues.length !== 0) {
-      await this.cacheManager.mset<any>(...ttlValues, { options: { ttl: Number.MAX_SAFE_INTEGER } });
+      await this.cacheManager.mset<any>(...this.toKeyOrValues(ttlValues), {
+        options: { ttl: Number.MAX_SAFE_INTEGER },
+      });
     }
   }
 
@@ -267,5 +281,26 @@ export class CacheDependencyService {
    */
   private stringArrayEquals(a: string[], b: string[]): boolean {
     return JSON.stringify(a.sort()) === JSON.stringify(b.sort());
+  }
+
+  private toKey(key: string): string {
+    if (!this.options.cacheDependencyVersion) {
+      return key;
+    }
+
+    return `${this.options.cacheDependencyVersion}:${key}`;
+  }
+
+  private toKeyOrValues(keyOrValues: any[]): any {
+    if (!this.options.cacheDependencyVersion) {
+      return keyOrValues;
+    }
+
+    return keyOrValues.map((kv, i) => {
+      if (typeof kv !== "string") {
+        return kv;
+      }
+      return i % 2 ? kv : `${this.options.cacheDependencyVersion}:${kv}`;
+    });
   }
 }
