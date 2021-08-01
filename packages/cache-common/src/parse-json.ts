@@ -1,3 +1,5 @@
+const dateRegExp = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
 /**
  * parse json string to javascript object.
  * JSON.parse has receiver for Date.parse.
@@ -10,7 +12,7 @@ export const parseJSON = <T>(json?: string): T | undefined => {
 
   try {
     return JSON.parse(json, (_: string, value: any): any => {
-      if (typeof value === "string" && value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)) {
+      if (typeof value === "string" && dateRegExp.test(value)) {
         const date = Date.parse(value);
         if (!isNaN(date)) {
           return new Date(date);
