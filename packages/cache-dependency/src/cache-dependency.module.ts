@@ -1,4 +1,16 @@
-import { CacheModule, DynamicModule, Global, Module, Provider, Type } from "@nestjs/common";
+import {
+  CacheModule,
+  DynamicModule,
+  Global,
+  Inject,
+  Module,
+  OnModuleDestroy,
+  OnModuleInit,
+  Provider,
+  Type,
+} from "@nestjs/common";
+import { CacheDependencyPubSubService } from "./cache-dependency-pubsub.service";
+import { CacheDependencyEventEmitter } from "./cache-dependency.emitter";
 import { CacheDependencyInterceptor } from "./cache-dependency.interceptor";
 import {
   CacheDependencyModuleAsyncOptions,
@@ -15,8 +27,26 @@ import { CACHE_DEPENDENCY_MODULE_OPTIONS } from "./constants";
  * @class CacheDependencyModule
  */
 @Global()
-@Module({})
-export class CacheDependencyModule {
+@Module({ providers: [CacheDependencyPubSubService] })
+export class CacheDependencyModule implements OnModuleInit, OnModuleDestroy {
+  constructor(
+    private readonly pubsubService: CacheDependencyPubSubService,
+    @Inject(CACHE_DEPENDENCY_MODULE_OPTIONS)
+    private readonly options: CacheDependencyModuleOptions,
+  ) {}
+
+  async onModuleInit(): Promise<void> {
+    if (this.options.pubsub) {
+      await this.pubsubService.init();
+    }
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    if (this.options.pubsub) {
+      await this.pubsubService.close();
+    }
+  }
+
   /**
    * Configure the cache dependency statically.
    *
@@ -31,7 +61,7 @@ export class CacheDependencyModule {
     return {
       module: CacheDependencyModule,
       imports: [CacheModule.register(options)],
-      providers,
+      providers: [...providers, CacheDependencyEventEmitter],
       exports: providers,
     };
   }
@@ -49,7 +79,7 @@ export class CacheDependencyModule {
     return {
       module: CacheDependencyModule,
       imports: [CacheModule.registerAsync(options), ...(options.imports || [])],
-      providers,
+      providers: [...providers, CacheDependencyEventEmitter],
       exports: providers,
     };
   }
