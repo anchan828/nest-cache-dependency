@@ -105,4 +105,16 @@ describe("CacheDependencyModule", () => {
       expect(moduleRef.get(Service).getOptions()).toEqual({ cacheDependencyVersion: "version" });
     });
   });
+
+  describe("use pubsub", () => {
+    it("should compile", async () => {
+      const module = await Test.createTestingModule({
+        imports: [CacheDependencyModule.register({ pubsub: { host: "localhost" } })],
+      }).compile();
+
+      const app = await module.init();
+      expect(app).toBeDefined();
+      await app.close();
+    });
+  });
 });

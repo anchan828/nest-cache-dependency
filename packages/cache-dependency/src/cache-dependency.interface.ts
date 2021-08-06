@@ -1,6 +1,6 @@
 import { CacheModuleOptions, ModuleMetadata, Provider, Type } from "@nestjs/common";
 import { DepGraph } from "dependency-graph";
-
+import { RedisOptions } from "ioredis";
 /**
  * Wraps dependency-graph
  */
@@ -16,6 +16,14 @@ export interface CacheDependencyModuleOptions extends CacheModuleOptions {
    * @memberof CacheDependencyModuleOptions
    */
   cacheDependencyVersion?: string;
+
+  /**
+   * Sends a message to all instances when the cache has been deleted.
+   * Use this when there may be multiple instances, such as Serverless with in-memory cache.
+   * @type {RedisOptions}
+   * @memberof CacheDependencyModuleOptions
+   */
+  pubsub?: RedisOptions;
 }
 
 export interface CacheDependencyModuleOptionsFactory {
@@ -27,4 +35,13 @@ export interface CacheDependencyModuleAsyncOptions extends Pick<ModuleMetadata, 
   useFactory?: (...args: any[]) => Promise<CacheDependencyModuleOptions> | CacheDependencyModuleOptions;
   inject?: any[];
   extraProviders?: Provider[];
+}
+
+export interface CacheDependencyPubSubMessage<T = any> {
+  instanceId: string;
+  data: T;
+}
+
+export interface CacheDependencyDeleteOptions {
+  emitEvent: boolean;
 }

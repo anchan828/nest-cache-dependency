@@ -1,6 +1,7 @@
 import { CacheManager, CacheManagerSetOptions, isNullOrUndefined } from "@anchan828/nest-cache-common";
 import { CACHE_MANAGER, Inject, Injectable, Logger } from "@nestjs/common";
 import { DepGraph } from "dependency-graph";
+import { CacheDependencyEventEmitter } from "./cache-dependency.emitter";
 import {
   CacheDependencyGraph,
   CacheDependencyModuleOptions,
@@ -23,7 +24,10 @@ export class CacheDependencyService {
     private readonly cacheManager: CacheManager,
     @Inject(CACHE_DEPENDENCY_MODULE_OPTIONS)
     private readonly options: CacheDependencyModuleOptions,
-  ) {}
+    private readonly emitter: CacheDependencyEventEmitter,
+  ) {
+    emitter.on("delete", (keys) => this.deleteWithoutEvent(...keys));
+  }
 
   /**
    * Get cache from store
@@ -150,6 +154,16 @@ export class CacheDependencyService {
    * @memberof CacheDependencyService
    */
   public async delete(...keys: string[]): Promise<void> {
+    if (keys.length === 0) {
+      return;
+    }
+
+    await this.cacheManager.del(...keys.map((k) => this.toKey(k)));
+
+    this.emitter.emit("delete", keys);
+  }
+
+  private async deleteWithoutEvent(...keys: string[]): Promise<void> {
     if (keys.length === 0) {
       return;
     }
