@@ -48,7 +48,7 @@ export class ExampleController {
   public getItems(): Item[] {
     return this.service.getItems();
   }
-  
+
   @Get("users/:userId/items/:itemId")
   @CacheKey("users/:userId/items/:itemId")
   public getItem(@Param("userId", ParseIntPipe) userId: number, @Param("itemId", ParseIntPipe) itemId: number): Item {
@@ -57,7 +57,10 @@ export class ExampleController {
 
   @Delete("users/:userId/items/:itemId")
   @ClearCacheDependencies("users/:userId/items/:itemId")
-  public deleteItem(@Param("userId", ParseIntPipe) userId: number, @Param("itemId", ParseIntPipe) itemId: number): void {
+  public deleteItem(
+    @Param("userId", ParseIntPipe) userId: number,
+    @Param("itemId", ParseIntPipe) itemId: number,
+  ): void {
     this.service.deleteItem(userId, itemId);
   }
 }
@@ -103,18 +106,53 @@ export class ExampleService {
     if (cache) {
       return cache;
     }
-    
-    const item = this.items.find(item => item.id === itemId);
+
+    const item = this.items.find((item) => item.id === itemId);
     await this.cacheService.setCache(cacheKey, item);
-    
+
     return item;
   }
-  
+
   public async deleteItem(userId: number, itemId: number): Promise<void> {
-    this.items = this.items.filter(item => item.id !== itemId);
+    this.items = this.items.filter((item) => item.id !== itemId);
     await this.cacheService.clearCacheDependencies(`users/${userId}/items/${itemId}`);
   }
 }
+```
+
+## Versioning
+
+Sometimes you don't want to use the old cache when you update your application.
+
+You can set prefix string to key as version.
+
+```ts
+@Module({
+  imports: [
+    CacheDependencyModule.register({
+      cacheDependencyVersion: "v1",
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+If you set `v1` and call `cacheDependencyService.set("users/1", user)`, cache manager will save value to `v1:users/1` key, not `users/1`
+
+## Using Pub/Sub
+
+You can use Pub/Sub pattern of Redis. This works well when it is a combination of in-memory cache and multiple instances.
+A message will be sent to all instances when the cache is explicitly **deleted**.
+
+```ts
+@Module({
+  imports: [
+    CacheDependencyModule.register({
+      pubsub: { host: "localhost" },
+    }),
+  ],
+})
+export class AppModule {}
 ```
 
 ## Notes
