@@ -2,7 +2,6 @@ import { Inject, Injectable, Logger } from "@nestjs/common";
 import * as Redis from "ioredis";
 import { CacheDependencyEventEmitter } from "./cache-dependency.emitter";
 import { CacheDependencyModuleOptions, CacheDependencyPubSubMessage } from "./cache-dependency.interface";
-import { CacheDependencyService } from "./cache-dependency.service";
 import {
   CACHE_DEPENDENCY_MODULE,
   CACHE_DEPENDENCY_MODULE_OPTIONS,
@@ -28,8 +27,6 @@ export class CacheDependencyPubSubService {
     @Inject(CACHE_DEPENDENCY_MODULE_OPTIONS)
     private readonly options: CacheDependencyModuleOptions,
     private readonly emitter: CacheDependencyEventEmitter,
-
-    private readonly cacheDependencyService: CacheDependencyService,
   ) {}
 
   public async init(): Promise<void> {
@@ -39,11 +36,7 @@ export class CacheDependencyPubSubService {
     await this.subscriber.subscribe(CACHE_DEPENDENCY_PUBSUB_DELETE_CHANNEL_EVENT);
 
     this.subscriber.on("message", this.handleMessageEvent.bind(this));
-
-    this.emitter.on("delete", async (keys: string[]) => {
-      await this.publishDeleteEvent(keys);
-    });
-
+    this.emitter.on("deleted", this.publishDeletedEvent.bind(this));
     this.logger.log(`[${this.instanceId}] PubSub initialized`);
   }
 
@@ -61,17 +54,13 @@ export class CacheDependencyPubSubService {
     }
 
     if (channel === CACHE_DEPENDENCY_PUBSUB_DELETE_CHANNEL_EVENT) {
-      await this.handleDeleteEvent(message.data);
+      this.emitter.emit("delete", message.data);
     }
 
     this.logger.log(`[${this.instanceId}] Received ${raw} from ${channel}`);
   }
 
-  private async handleDeleteEvent(keys: string[]): Promise<void> {
-    await this.cacheDependencyService["deleteWithoutEvent"](...keys);
-  }
-
-  private async publishDeleteEvent(keys: string[]): Promise<void> {
+  private async publishDeletedEvent(keys: string[]): Promise<void> {
     await this.publisher.publish(
       CACHE_DEPENDENCY_PUBSUB_DELETE_CHANNEL_EVENT,
       JSON.stringify({

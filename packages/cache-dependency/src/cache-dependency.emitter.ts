@@ -3,6 +3,7 @@ import { EventEmitter } from "events";
 import TypedEmitter from "typed-emitter";
 
 interface CacheDependencyMessageEvents {
+  deleted: (keys: string[]) => void;
   delete: (keys: string[]) => void;
 }
 

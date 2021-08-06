@@ -1,6 +1,7 @@
 import { CACHE_MANAGER } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { caching } from "cache-manager";
+import { CacheDependencyEventEmitter } from "./cache-dependency.emitter";
 import { CacheDependencyGraph } from "./cache-dependency.interface";
 import { CacheDependencyService } from "./cache-dependency.service";
 import { CACHE_DEPENDENCY_MODULE_OPTIONS } from "./constants";
@@ -11,6 +12,7 @@ describe.each(["", "v1", "next", "dev"])("CacheDependencyService version: %s", (
     const app = await Test.createTestingModule({
       providers: [
         CacheDependencyService,
+        CacheDependencyEventEmitter,
         {
           provide: CACHE_MANAGER,
           useValue: caching({

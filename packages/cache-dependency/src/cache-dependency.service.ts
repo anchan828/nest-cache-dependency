@@ -25,7 +25,9 @@ export class CacheDependencyService {
     @Inject(CACHE_DEPENDENCY_MODULE_OPTIONS)
     private readonly options: CacheDependencyModuleOptions,
     private readonly emitter: CacheDependencyEventEmitter,
-  ) {}
+  ) {
+    emitter.on("delete", (keys) => this.deleteWithoutEvent(...keys));
+  }
 
   /**
    * Get cache from store
