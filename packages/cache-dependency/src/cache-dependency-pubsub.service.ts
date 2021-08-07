@@ -52,7 +52,6 @@ export class CacheDependencyPubSubService {
   }
 
   private async publishDeletedEvent(keys: string[]): Promise<void> {
-    console.log("call");
     await this.publisher.publish(
       CACHE_DEPENDENCY_PUBSUB_DELETE_CHANNEL_EVENT,
       JSON.stringify({

@@ -67,9 +67,9 @@ describe("RedisStore", () => {
     await expect(redis.ttl(key)).resolves.toBeGreaterThan(5);
   });
 
-  it("should set ttl: Number.MAX_SAFE_INTEGER", async () => {
+  it("should set ttl: -1", async () => {
     const key = "test";
-    await store.set(key, { id: 1 }, { ttl: Number.MAX_SAFE_INTEGER });
+    await store.set(key, { id: 1 }, { ttl: -1 });
     await expect(redis.ttl(key)).resolves.toEqual(-1);
   });
 
@@ -134,7 +134,7 @@ describe("RedisStore", () => {
   });
 
   it("should mset", async () => {
-    await store.mset("key1", "key1:value", "key2", "key2:value", "key3", "key3:value");
+    await store.mset("key1", "key1:value", "key2", "key2:value", "key3", "key3:value", { ttl: 1000 });
     await expect(store.keys()).resolves.toEqual(["cache:key1", "cache:key2", "cache:key3"]);
     await expect(store.mget(...["key1", "key2", "key3"])).resolves.toEqual(["key1:value", "key2:value", "key3:value"]);
   });

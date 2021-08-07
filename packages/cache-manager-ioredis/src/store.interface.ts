@@ -1,11 +1,27 @@
-import { LiteralObject } from "@nestjs/common";
-
-export interface RedisStoreArgs extends LiteralObject {
+import { RedisOptions } from "ioredis";
+export interface RedisStoreArgs extends RedisOptions {
+  /**
+   * The ttl in seconds.
+   *
+   * @type {number}
+   * @memberof RedisStoreArgs
+   */
   ttl?: number;
-  keyPrefix?: string;
-  // If enabled, you can cache results of redis to in-memory.
+
+  /**
+   * If enabled, you can cache results of redis to in-memory.
+   *
+   * @type {boolean}
+   * @memberof RedisStoreArgs
+   */
   enabledInMemory?: boolean;
-  // If enabledInMemory is enabled, you can set ttl of in-memory.
+
+  /**
+   * If enabledInMemory is enabled, you can set ttl of in-memory. The ttl in seconds.
+   *
+   * @type {number}
+   * @memberof RedisStoreArgs
+   */
   inMemoryTTL?: number;
 }
 

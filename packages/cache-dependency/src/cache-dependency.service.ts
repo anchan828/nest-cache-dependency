@@ -159,7 +159,6 @@ export class CacheDependencyService {
     }
 
     await this.cacheManager.del(...keys.map((k) => this.toKey(k)));
-
     this.emitter.emit("deleted", keys);
   }
 
@@ -242,14 +241,13 @@ export class CacheDependencyService {
         }
       }
     }
-
     if (values.length !== 0) {
       await this.cacheManager.mset<any>(...this.toKeyOrValues(values));
     }
 
     if (ttlValues.length !== 0) {
       await this.cacheManager.mset<any>(...this.toKeyOrValues(ttlValues), {
-        options: { ttl: Number.MAX_SAFE_INTEGER },
+        options: { ttl: -1 },
       });
     }
   }

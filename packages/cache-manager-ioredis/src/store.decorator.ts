@@ -8,7 +8,7 @@ export function CallbackDecorator(): MethodDecorator {
       let callback: CallbackFunction | undefined;
 
       if (typeof args[args.length - 1] === "function") {
-        callback = args[args.length - 1];
+        callback = args.pop();
       }
 
       try {
@@ -38,7 +38,7 @@ export function DelCallbackDecorator(): MethodDecorator {
       let callback: CallbackFunction | undefined;
 
       if (typeof args[args.length - 1] === "function") {
-        callback = args[args.length - 1];
+        callback = args.pop();
       }
 
       try {
