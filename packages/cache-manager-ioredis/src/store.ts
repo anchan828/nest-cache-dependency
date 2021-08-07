@@ -1,5 +1,11 @@
 /* eslint-disable prefer-rest-params */
-import { CacheManager, CacheManagerSetOptions, isNullOrUndefined, parseJSON } from "@anchan828/nest-cache-common";
+import {
+  CacheManager,
+  CacheManagerSetOptions,
+  CACHE_DEPENDENCY_PREFIX_CACHE_KEY,
+  isNullOrUndefined,
+  parseJSON,
+} from "@anchan828/nest-cache-common";
 import { CacheStore, CacheStoreFactory, LiteralObject } from "@nestjs/common";
 import * as Redis from "ioredis";
 import * as LRUCache from "lru-cache";
@@ -40,7 +46,7 @@ export class RedisStore implements CacheManager {
       return;
     }
 
-    if (this.memoryCache) {
+    if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
       this.memoryCache.set(key, value);
     }
 
@@ -80,7 +86,7 @@ export class RedisStore implements CacheManager {
 
     result = parseJSON<T>(rawResult);
 
-    if (this.memoryCache) {
+    if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
       this.memoryCache.set(key, result);
     }
 
@@ -123,8 +129,10 @@ export class RedisStore implements CacheManager {
     const map = new Map<string, T | undefined>(keys.map((key) => [key, undefined]));
     if (this.memoryCache) {
       for (const key of keys) {
-        const result = this.memoryCache.get(key);
-        map.set(key, result);
+        if (!key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
+          const result = this.memoryCache.get(key);
+          map.set(key, result);
+        }
       }
     }
 
@@ -161,7 +169,7 @@ export class RedisStore implements CacheManager {
           continue;
         }
 
-        if (this.memoryCache) {
+        if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
           this.memoryCache.set(key, value);
         }
 

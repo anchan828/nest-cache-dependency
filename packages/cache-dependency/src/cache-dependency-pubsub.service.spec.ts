@@ -49,18 +49,37 @@ describe("CacheDependencyPubSubService", () => {
         .map((app) => app.get(CacheDependencyService)["cacheManager"])
         .map((manager) => Reflect.get(manager, "store")?.memoryCache)
         .filter((lru): lru is LRUCache<string, any> => lru)
+        .map((lru) => lru.keys()),
+    ).toEqual([
+      ["key1", "key2"],
+      ["key1", "key2"],
+      ["key1", "key2"],
+      ["key1", "key2"],
+      ["key1", "key2"],
+      ["key1", "key2"],
+      ["key1", "key2"],
+      ["key1", "key2"],
+      ["key1", "key2"],
+      ["key1", "key2"],
+    ]);
+
+    expect(
+      apps
+        .map((app) => app.get(CacheDependencyService)["cacheManager"])
+        .map((manager) => Reflect.get(manager, "store")?.memoryCache)
+        .filter((lru): lru is LRUCache<string, any> => lru)
         .map((lru) => lru.values()),
     ).toEqual([
-      [["key2"], "A", "B"],
-      [["key2"], "A", "B"],
-      [["key2"], "A", "B"],
-      [["key2"], "A", "B"],
-      [["key2"], "A", "B"],
-      [["key2"], "A", "B"],
-      [["key2"], "A", "B"],
-      [["key2"], "A", "B"],
-      [["key2"], "A", "B"],
-      [["key2"], "A", "B"],
+      ["A", "B"],
+      ["A", "B"],
+      ["A", "B"],
+      ["A", "B"],
+      ["A", "B"],
+      ["A", "B"],
+      ["A", "B"],
+      ["A", "B"],
+      ["A", "B"],
+      ["A", "B"],
     ]);
 
     await service.clearCacheDependencies("key1");

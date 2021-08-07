@@ -1,9 +1,9 @@
+import { CACHE_DEPENDENCY_PREFIX_CACHE_KEY } from "@anchan828/nest-cache-common";
 import { Injectable, Module } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { CacheDependencyGraph } from "../cache-dependency.interface";
 import { CacheDependencyModule } from "../cache-dependency.module";
 import { CacheDependencyService } from "../cache-dependency.service";
-import { CACHE_DEPENDENCY_PREFIX_CACHE_KEY } from "../constants";
 interface Item {
   id: number;
   name: string;
