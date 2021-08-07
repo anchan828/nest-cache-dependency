@@ -1,6 +1,6 @@
 import { redisStore } from "@anchan828/nest-cache-manager-ioredis";
 import { Test, TestingModule } from "@nestjs/testing";
-import * as LRU from "lru-cache";
+import * as LRUCache from "lru-cache";
 import { CacheDependencyModule } from "./cache-dependency.module";
 import { CacheDependencyService } from "./cache-dependency.service";
 import { wait } from "./test.utils";
@@ -48,7 +48,7 @@ describe("CacheDependencyPubSubService", () => {
       apps
         .map((app) => app.get(CacheDependencyService)["cacheManager"])
         .map((manager) => Reflect.get(manager, "store")?.memoryCache)
-        .filter((lru): lru is LRU.Cache<string, any> => lru)
+        .filter((lru): lru is LRUCache<string, any> => lru)
         .map((lru) => lru.values()),
     ).toEqual([
       [["key2"], "A", "B"],
@@ -71,7 +71,7 @@ describe("CacheDependencyPubSubService", () => {
       apps
         .map((app) => app.get(CacheDependencyService)["cacheManager"])
         .map((manager) => Reflect.get(manager, "store")?.memoryCache)
-        .filter((lru): lru is LRU.Cache<string, any> => lru)
+        .filter((lru): lru is LRUCache<string, any> => lru)
         .map((lru) => lru.values()),
     ).toEqual([[], [], [], [], [], [], [], [], [], []]);
   });

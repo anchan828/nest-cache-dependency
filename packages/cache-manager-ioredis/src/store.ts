@@ -11,7 +11,7 @@ class RedisStore implements CacheManager {
 
   public readonly name: string = CACHE_STORE_NAME;
 
-  private readonly memoryCache?: LRUCache.Cache<string, any>;
+  private readonly memoryCache?: LRUCache<string, any>;
 
   constructor(private readonly args: RedisStoreArgs) {
     if (!args.keyPrefix) {
