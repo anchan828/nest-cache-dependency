@@ -20,13 +20,16 @@ export class RedisStore implements CacheManager {
       args.keyPrefix = CACHE_KEY_PREFIX;
     }
 
-    if (args.enabledInMemory) {
+    if (args.enabledInMemory || args.inMemory?.enabled) {
       this.memoryCache = new LRUCache<string, any>({
         max: Number.MAX_SAFE_INTEGER,
-        maxAge: (args.inMemoryTTL || 5) * 1000,
+        maxAge: (args.inMemoryTTL || args.inMemory?.ttl || 5) * 1000,
       });
 
-      this.memoryCacheIntervalId = setInterval(() => this.memoryCache?.prune(), 1000 * 10);
+      this.memoryCacheIntervalId = setInterval(
+        () => this.memoryCache?.prune(),
+        args.inMemory?.pruneInterval || 1000 * 10,
+      );
     }
     this.redisCache = new Redis(args);
   }
