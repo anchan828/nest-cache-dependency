@@ -70,7 +70,7 @@ export class RedisStore implements CacheManager {
   @CallbackDecorator()
   public async get<T>(key: string): Promise<T | undefined> {
     let result: T | null | undefined;
-    if (this.memoryCache) {
+    if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
       result = this.memoryCache.get(key);
     }
 
