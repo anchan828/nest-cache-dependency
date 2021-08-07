@@ -3,6 +3,7 @@ import { CacheStore, CacheStoreFactory, LiteralObject } from "@nestjs/common";
 import { caching } from "cache-manager";
 import * as Redis from "ioredis";
 import { CACHE_KEY_PREFIX, CACHE_STORE_NAME } from "./constants";
+import { CallbackDecorator, DelCallbackDecorator } from "./store.decorator";
 import { RedisStoreArgs } from "./store.interface";
 class RedisStore implements CacheManager {
   private readonly redisCache: Redis.Redis;
@@ -26,9 +27,9 @@ class RedisStore implements CacheManager {
     this.redisCache = new Redis(args);
   }
 
+  @CallbackDecorator()
   public async set(key: any, value: any, options?: CacheManagerSetOptions): Promise<void> {
     const json = JSON.stringify(value) || '"undefined"';
-
     if (this.memoryStore) {
       await this.memoryStore.del(key);
     }
@@ -44,6 +45,7 @@ class RedisStore implements CacheManager {
     }
   }
 
+  @CallbackDecorator()
   public async get<T>(key: string): Promise<T | undefined> {
     let result: T | null | undefined;
     if (this.memoryStore) {
@@ -69,6 +71,7 @@ class RedisStore implements CacheManager {
     return result;
   }
 
+  @DelCallbackDecorator()
   public async del(...keys: string[]): Promise<void> {
     if (this.memoryStore) {
       await this.memoryStore.del(...keys);
@@ -76,6 +79,7 @@ class RedisStore implements CacheManager {
     await this.redisCache.del(...keys);
   }
 
+  @CallbackDecorator()
   public async keys(pattern?: string): Promise<string[]> {
     if (!pattern) {
       pattern = "*";
@@ -87,6 +91,7 @@ class RedisStore implements CacheManager {
     return keys.sort();
   }
 
+  @DelCallbackDecorator()
   public async reset(): Promise<void> {
     if (this.memoryStore) {
       await this.memoryStore.reset();
@@ -97,11 +102,13 @@ class RedisStore implements CacheManager {
     }
   }
 
+  @CallbackDecorator()
   public async mget<T>(...keys: string[]): Promise<Array<T | undefined>> {
     const results = (await this.redisCache.mget(...keys)) as Array<string | undefined>;
     return results.map((result) => parseJSON<T>(result));
   }
 
+  @CallbackDecorator()
   public async mset<T>(...keyOrValues: Array<string | T>): Promise<void> {
     for (let i = 0; i < keyOrValues.length; i += 2) {
       if (keyOrValues.length !== i + 1) {

@@ -1,15 +1,20 @@
+import { redisStore } from "@anchan828/nest-cache-manager-ioredis";
 import { Test, TestingModule } from "@nestjs/testing";
 import { CacheDependencyModule } from "./cache-dependency.module";
 import { CacheDependencyService } from "./cache-dependency.service";
 import { wait } from "./test.utils";
-
 describe("CacheDependencyPubSubService", () => {
   let apps: TestingModule[] = [];
   beforeEach(async () => {
     apps = [];
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 1; i++) {
       const module = await Test.createTestingModule({
-        imports: [CacheDependencyModule.register({ pubsub: { host: "localhost" } })],
+        imports: [
+          CacheDependencyModule.register([
+            { ttl: 10, pubsub: { host: "localhost" } },
+            { store: redisStore, host: process.env.REDIS_HOST || "localhost" },
+          ]),
+        ],
       }).compile();
 
       const app = await module.init();

@@ -27,12 +27,20 @@ export interface CacheDependencyModuleOptions extends CacheModuleOptions {
 }
 
 export interface CacheDependencyModuleOptionsFactory {
-  createCacheOptions(): Promise<CacheDependencyModuleOptions> | CacheDependencyModuleOptions;
+  createCacheOptions():
+    | Promise<CacheDependencyModuleOptions | CacheDependencyModuleOptions[]>
+    | CacheDependencyModuleOptions
+    | CacheDependencyModuleOptions[];
 }
 export interface CacheDependencyModuleAsyncOptions extends Pick<ModuleMetadata, "imports"> {
   useExisting?: Type<CacheDependencyModuleOptionsFactory>;
   useClass?: Type<CacheDependencyModuleOptionsFactory>;
-  useFactory?: (...args: any[]) => Promise<CacheDependencyModuleOptions> | CacheDependencyModuleOptions;
+  useFactory?: (
+    ...args: any[]
+  ) =>
+    | Promise<CacheDependencyModuleOptions | CacheDependencyModuleOptions[]>
+    | CacheDependencyModuleOptions
+    | CacheDependencyModuleOptions[];
   inject?: any[];
   extraProviders?: Provider[];
 }

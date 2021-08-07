@@ -1,12 +1,8 @@
-import { Inject, Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import * as Redis from "ioredis";
 import { CacheDependencyEventEmitter } from "./cache-dependency.emitter";
-import { CacheDependencyModuleOptions, CacheDependencyPubSubMessage } from "./cache-dependency.interface";
-import {
-  CACHE_DEPENDENCY_MODULE,
-  CACHE_DEPENDENCY_MODULE_OPTIONS,
-  CACHE_DEPENDENCY_PUBSUB_DELETE_CHANNEL_EVENT,
-} from "./constants";
+import { CacheDependencyPubSubMessage } from "./cache-dependency.interface";
+import { CACHE_DEPENDENCY_MODULE, CACHE_DEPENDENCY_PUBSUB_DELETE_CHANNEL_EVENT } from "./constants";
 /**
  * pubsub service
  *
@@ -23,21 +19,18 @@ export class CacheDependencyPubSubService {
 
   private instanceId: string = Date.now().toString();
 
-  constructor(
-    @Inject(CACHE_DEPENDENCY_MODULE_OPTIONS)
-    private readonly options: CacheDependencyModuleOptions,
-    private readonly emitter: CacheDependencyEventEmitter,
-  ) {}
+  constructor(private readonly emitter: CacheDependencyEventEmitter) {}
 
-  public async init(): Promise<void> {
-    this.publisher = new Redis(this.options.pubsub);
-    this.subscriber = new Redis(this.options.pubsub);
+  public async init(pubsubOptions: Redis.RedisOptions): Promise<this> {
+    this.publisher = new Redis(pubsubOptions);
+    this.subscriber = new Redis(pubsubOptions);
 
     await this.subscriber.subscribe(CACHE_DEPENDENCY_PUBSUB_DELETE_CHANNEL_EVENT);
 
     this.subscriber.on("message", this.handleMessageEvent.bind(this));
     this.emitter.on("deleted", this.publishDeletedEvent.bind(this));
     this.logger.log(`[${this.instanceId}] PubSub initialized`);
+    return this;
   }
 
   public async close(): Promise<void> {
@@ -56,11 +49,10 @@ export class CacheDependencyPubSubService {
     if (channel === CACHE_DEPENDENCY_PUBSUB_DELETE_CHANNEL_EVENT) {
       this.emitter.emit("delete", message.data);
     }
-
-    this.logger.log(`[${this.instanceId}] Received ${raw} from ${channel}`);
   }
 
   private async publishDeletedEvent(keys: string[]): Promise<void> {
+    console.log("call");
     await this.publisher.publish(
       CACHE_DEPENDENCY_PUBSUB_DELETE_CHANNEL_EVENT,
       JSON.stringify({

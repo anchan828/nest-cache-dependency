@@ -8,3 +8,5 @@ export interface RedisStoreArgs extends LiteralObject {
   // If enabledInMemory is enabled, you can set ttl of in-memory.
   inMemoryTTL?: number;
 }
+
+export type CallbackFunction = (err?: Error | null, result?: any | null) => void;

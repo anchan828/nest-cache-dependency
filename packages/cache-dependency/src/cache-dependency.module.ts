@@ -27,23 +27,31 @@ import { CACHE_DEPENDENCY_MODULE_OPTIONS } from "./constants";
  * @class CacheDependencyModule
  */
 @Global()
-@Module({ providers: [CacheDependencyPubSubService] })
+@Module({})
 export class CacheDependencyModule implements OnModuleInit, OnModuleDestroy {
+  private pubsubServices: CacheDependencyPubSubService[] = [];
+
   constructor(
-    private readonly pubsubService: CacheDependencyPubSubService,
+    private readonly emitter: CacheDependencyEventEmitter,
     @Inject(CACHE_DEPENDENCY_MODULE_OPTIONS)
     private readonly options: CacheDependencyModuleOptions,
   ) {}
 
   async onModuleInit(): Promise<void> {
-    if (this.options.pubsub) {
-      await this.pubsubService.init();
+    if (Array.isArray(this.options)) {
+      for (const opt of this.options) {
+        if (opt.pubsub) {
+          this.pubsubServices.push(await new CacheDependencyPubSubService(this.emitter).init(opt.pubsub));
+        }
+      }
+    } else if (this.options.pubsub) {
+      this.pubsubServices.push(await new CacheDependencyPubSubService(this.emitter).init(this.options.pubsub));
     }
   }
 
   async onModuleDestroy(): Promise<void> {
-    if (this.options.pubsub) {
-      await this.pubsubService.close();
+    for (const pubsubService of this.pubsubServices) {
+      await pubsubService.close();
     }
   }
 
@@ -55,7 +63,7 @@ export class CacheDependencyModule implements OnModuleInit, OnModuleDestroy {
    * @returns {DynamicModule}
    * @memberof CacheDependencyModule
    */
-  public static register(options: CacheDependencyModuleOptions = {}): DynamicModule {
+  public static register(options: CacheDependencyModuleOptions | CacheDependencyModuleOptions[] = {}): DynamicModule {
     const providers: Provider[] = [...this.providers, { provide: CACHE_DEPENDENCY_MODULE_OPTIONS, useValue: options }];
 
     return {

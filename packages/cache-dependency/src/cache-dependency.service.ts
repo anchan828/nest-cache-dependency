@@ -160,7 +160,7 @@ export class CacheDependencyService {
 
     await this.cacheManager.del(...keys.map((k) => this.toKey(k)));
 
-    this.emitter.emit("delete", keys);
+    this.emitter.emit("deleted", keys);
   }
 
   private async deleteWithoutEvent(...keys: string[]): Promise<void> {
