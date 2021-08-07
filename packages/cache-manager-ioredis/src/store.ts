@@ -6,12 +6,14 @@ import * as LRUCache from "lru-cache";
 import { CACHE_KEY_PREFIX, CACHE_STORE_NAME } from "./constants";
 import { CallbackDecorator, DelCallbackDecorator } from "./store.decorator";
 import { RedisStoreArgs } from "./store.interface";
-class RedisStore implements CacheManager {
+export class RedisStore implements CacheManager {
   private readonly redisCache: Redis.Redis;
 
   public readonly name: string = CACHE_STORE_NAME;
 
   private readonly memoryCache?: LRUCache<string, any>;
+
+  private readonly memoryCacheIntervalId?: NodeJS.Timeout;
 
   constructor(private readonly args: RedisStoreArgs) {
     if (!args.keyPrefix) {
@@ -23,12 +25,14 @@ class RedisStore implements CacheManager {
         max: Number.MAX_SAFE_INTEGER,
         maxAge: (args.inMemoryTTL || 5) * 1000,
       });
+
+      this.memoryCacheIntervalId = setInterval(() => this.memoryCache?.prune(), 1000 * 10);
     }
     this.redisCache = new Redis(args);
   }
 
   @CallbackDecorator()
-  public async set(key: any, value: any, options?: CacheManagerSetOptions): Promise<void> {
+  public async set<T = any>(key: string, value: T, options?: CacheManagerSetOptions): Promise<void> {
     if (value === undefined || value === null) {
       return;
     }
@@ -176,6 +180,14 @@ class RedisStore implements CacheManager {
       }
     }
     await pipeline.exec();
+  }
+
+  public async close(): Promise<void> {
+    await this.redisCache.quit();
+    if (this.args.enabledInMemory && this.memoryCacheIntervalId) {
+      this.memoryCache?.reset();
+      clearInterval(this.memoryCacheIntervalId);
+    }
   }
 
   private isObject(value: any): value is Object {
