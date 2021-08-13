@@ -162,16 +162,8 @@ export class CacheDependencyService {
     this.emitter.emit("deleted", keys);
   }
 
-  private async deleteWithoutEvent(...keys: string[]): Promise<void> {
-    if (keys.length === 0) {
-      return;
-    }
-
-    await this.cacheManager.del(...keys.map((k) => this.toKey(k)));
-  }
-
   /**
-   * Get all keys
+   * Get keys
    *
    * @param {string} [pattern]
    * @returns {Promise<string[]>}
@@ -185,6 +177,17 @@ export class CacheDependencyService {
           ? k.replace(new RegExp(`^(${this.options.cacheDependencyVersion}?):`), "")
           : k,
       );
+  }
+
+  /**
+   * Get key/value pairs
+   *
+   * @param {string} [pattern]
+   * @return {*}  {Promise<Record<string, any>>}
+   * @memberof CacheDependencyService
+   */
+  public async getEntries(pattern?: string): Promise<Record<string, any>> {
+    return this.mget(await this.getKeys(pattern));
   }
 
   /**
@@ -286,6 +289,17 @@ export class CacheDependencyService {
   public async clearCacheDependencies(key: string): Promise<void> {
     const cacheKeys = await this.getCacheDependencyKeys(key);
     await this.delete(...cacheKeys);
+  }
+
+  /**
+   * This method is internal delete method for pubsub
+   */
+  private async deleteWithoutEvent(...keys: string[]): Promise<void> {
+    if (keys.length === 0) {
+      return;
+    }
+
+    await this.cacheManager.del(...keys.map((k) => this.toKey(k)));
   }
 
   /**
