@@ -1,4 +1,16 @@
-import { CacheModule, DynamicModule, Global, Module, Provider, Type } from "@nestjs/common";
+import {
+  CacheModule,
+  DynamicModule,
+  Global,
+  Inject,
+  Module,
+  OnModuleDestroy,
+  OnModuleInit,
+  Provider,
+  Type,
+} from "@nestjs/common";
+import { CacheDependencyPubSubService } from "./cache-dependency-pubsub.service";
+import { CacheDependencyEventEmitter } from "./cache-dependency.emitter";
 import { CacheDependencyInterceptor } from "./cache-dependency.interceptor";
 import {
   CacheDependencyModuleAsyncOptions,
@@ -16,7 +28,33 @@ import { CACHE_DEPENDENCY_MODULE_OPTIONS } from "./constants";
  */
 @Global()
 @Module({})
-export class CacheDependencyModule {
+export class CacheDependencyModule implements OnModuleInit, OnModuleDestroy {
+  private pubsubServices: CacheDependencyPubSubService[] = [];
+
+  constructor(
+    private readonly emitter: CacheDependencyEventEmitter,
+    @Inject(CACHE_DEPENDENCY_MODULE_OPTIONS)
+    private readonly options: CacheDependencyModuleOptions,
+  ) {}
+
+  async onModuleInit(): Promise<void> {
+    if (Array.isArray(this.options)) {
+      for (const opt of this.options) {
+        if (opt.pubsub) {
+          this.pubsubServices.push(await new CacheDependencyPubSubService(this.emitter).init(opt.pubsub));
+        }
+      }
+    } else if (this.options.pubsub) {
+      this.pubsubServices.push(await new CacheDependencyPubSubService(this.emitter).init(this.options.pubsub));
+    }
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    for (const pubsubService of this.pubsubServices) {
+      await pubsubService.close();
+    }
+  }
+
   /**
    * Configure the cache dependency statically.
    *
@@ -25,13 +63,13 @@ export class CacheDependencyModule {
    * @returns {DynamicModule}
    * @memberof CacheDependencyModule
    */
-  public static register(options: CacheDependencyModuleOptions = {}): DynamicModule {
+  public static register(options: CacheDependencyModuleOptions | CacheDependencyModuleOptions[] = {}): DynamicModule {
     const providers: Provider[] = [...this.providers, { provide: CACHE_DEPENDENCY_MODULE_OPTIONS, useValue: options }];
 
     return {
       module: CacheDependencyModule,
       imports: [CacheModule.register(options)],
-      providers,
+      providers: [...providers, CacheDependencyEventEmitter],
       exports: providers,
     };
   }
@@ -49,7 +87,7 @@ export class CacheDependencyModule {
     return {
       module: CacheDependencyModule,
       imports: [CacheModule.registerAsync(options), ...(options.imports || [])],
-      providers,
+      providers: [...providers, CacheDependencyEventEmitter],
       exports: providers,
     };
   }

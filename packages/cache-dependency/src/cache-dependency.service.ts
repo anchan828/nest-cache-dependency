@@ -1,6 +1,7 @@
 import { CacheManager, CacheManagerSetOptions, isNullOrUndefined } from "@anchan828/nest-cache-common";
 import { CACHE_MANAGER, Inject, Injectable, Logger } from "@nestjs/common";
 import { DepGraph } from "dependency-graph";
+import { CacheDependencyEventEmitter } from "./cache-dependency.emitter";
 import {
   CacheDependencyGraph,
   CacheDependencyModuleOptions,
@@ -23,7 +24,10 @@ export class CacheDependencyService {
     private readonly cacheManager: CacheManager,
     @Inject(CACHE_DEPENDENCY_MODULE_OPTIONS)
     private readonly options: CacheDependencyModuleOptions,
-  ) {}
+    private readonly emitter: CacheDependencyEventEmitter,
+  ) {
+    emitter.on("delete", (keys) => this.deleteWithoutEvent(...keys));
+  }
 
   /**
    * Get cache from store
@@ -155,10 +159,11 @@ export class CacheDependencyService {
     }
 
     await this.cacheManager.del(...keys.map((k) => this.toKey(k)));
+    this.emitter.emit("deleted", keys);
   }
 
   /**
-   * Get all keys
+   * Get keys
    *
    * @param {string} [pattern]
    * @returns {Promise<string[]>}
@@ -172,6 +177,17 @@ export class CacheDependencyService {
           ? k.replace(new RegExp(`^(${this.options.cacheDependencyVersion}?):`), "")
           : k,
       );
+  }
+
+  /**
+   * Get key/value pairs
+   *
+   * @param {string} [pattern]
+   * @return {*}  {Promise<Record<string, any>>}
+   * @memberof CacheDependencyService
+   */
+  public async getEntries(pattern?: string): Promise<Record<string, any>> {
+    return this.mget(await this.getKeys(pattern));
   }
 
   /**
@@ -228,14 +244,13 @@ export class CacheDependencyService {
         }
       }
     }
-
     if (values.length !== 0) {
       await this.cacheManager.mset<any>(...this.toKeyOrValues(values));
     }
 
     if (ttlValues.length !== 0) {
       await this.cacheManager.mset<any>(...this.toKeyOrValues(ttlValues), {
-        options: { ttl: Number.MAX_SAFE_INTEGER },
+        options: { ttl: -1 },
       });
     }
   }
@@ -274,6 +289,17 @@ export class CacheDependencyService {
   public async clearCacheDependencies(key: string): Promise<void> {
     const cacheKeys = await this.getCacheDependencyKeys(key);
     await this.delete(...cacheKeys);
+  }
+
+  /**
+   * This method is internal delete method for pubsub
+   */
+  private async deleteWithoutEvent(...keys: string[]): Promise<void> {
+    if (keys.length === 0) {
+      return;
+    }
+
+    await this.cacheManager.del(...keys.map((k) => this.toKey(k)));
   }
 
   /**
