@@ -158,6 +158,8 @@ export class CacheDependencyService {
       return;
     }
 
+    keys = Array.from(new Set(keys));
+
     await this.cacheManager.del(...keys.map((k) => this.toKey(k)));
     this.emitter.emit("deleted", keys);
   }
@@ -286,9 +288,9 @@ export class CacheDependencyService {
    * @returns {Promise<void>}
    * @memberof CacheDependencyService
    */
-  public async clearCacheDependencies(key: string): Promise<void> {
-    const cacheKeys = await this.getCacheDependencyKeys(key);
-    await this.delete(...cacheKeys);
+  public async clearCacheDependencies(...keys: string[]): Promise<void> {
+    const cacheKeys = await Promise.all(keys.map((key) => this.getCacheDependencyKeys(key)));
+    await this.delete(...cacheKeys.flat());
   }
 
   /**
