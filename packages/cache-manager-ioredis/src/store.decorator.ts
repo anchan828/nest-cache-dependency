@@ -17,7 +17,7 @@ export function CallbackDecorator(): MethodDecorator {
           return callback(null, result);
         }
         return Promise.resolve(result);
-      } catch (err) {
+      } catch (err: any) {
         if (callback) {
           return callback(err, null);
         }
@@ -49,7 +49,7 @@ export function DelCallbackDecorator(): MethodDecorator {
         }
 
         return Promise.resolve(result);
-      } catch (err) {
+      } catch (err: any) {
         if (callback) {
           return;
         }
