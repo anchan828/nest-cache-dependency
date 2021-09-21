@@ -102,7 +102,7 @@ export class RedisStore implements CacheManager {
     if (!pattern) {
       pattern = "*";
     }
-    const keys = await this.redisCache.keys(`${this.args.keyPrefix}${pattern}`);
+    const keys = await this.redisCache.keys(pattern);
     if (!Array.isArray(keys)) {
       return [];
     }
