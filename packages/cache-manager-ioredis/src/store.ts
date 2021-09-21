@@ -9,7 +9,7 @@ import {
 import { CacheStore, CacheStoreFactory, LiteralObject } from "@nestjs/common";
 import * as Redis from "ioredis";
 import * as LRUCache from "lru-cache";
-import { CACHE_KEY_PREFIX, CACHE_STORE_NAME } from "./constants";
+import { CACHE_STORE_NAME } from "./constants";
 import { CallbackDecorator, DelCallbackDecorator } from "./store.decorator";
 import { RedisStoreArgs } from "./store.interface";
 export class RedisStore implements CacheManager {
@@ -22,10 +22,6 @@ export class RedisStore implements CacheManager {
   private readonly memoryCacheIntervalId?: NodeJS.Timeout;
 
   constructor(private readonly args: RedisStoreArgs) {
-    if (!args.keyPrefix) {
-      args.keyPrefix = CACHE_KEY_PREFIX;
-    }
-
     if (args.enabledInMemory || args.inMemory?.enabled) {
       this.memoryCache = new LRUCache<string, any>({
         max: Number.MAX_SAFE_INTEGER,
@@ -106,7 +102,7 @@ export class RedisStore implements CacheManager {
     if (!pattern) {
       pattern = "*";
     }
-    const keys = await this.redisCache.keys(`${this.args.keyPrefix}${pattern}`);
+    const keys = await this.redisCache.keys(pattern);
     if (!Array.isArray(keys)) {
       return [];
     }

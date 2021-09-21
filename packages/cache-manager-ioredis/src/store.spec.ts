@@ -88,7 +88,7 @@ describe("RedisStore", () => {
 
     const results = await store.keys();
 
-    expect(results.sort()).toEqual(["cache:key1", "cache:key2", "cache:key3"]);
+    expect(results.sort()).toEqual(["key1", "key2", "key3"]);
   });
 
   it("should reset cache keys", async () => {
@@ -97,7 +97,7 @@ describe("RedisStore", () => {
       await store.set(key, key);
     }
     let results = await store.keys();
-    expect(results.sort()).toEqual(["cache:key1", "cache:key2", "cache:key3"]);
+    expect(results.sort()).toEqual(["key1", "key2", "key3"]);
     await store.reset();
     results = await store.keys();
     expect(results.sort()).toEqual([]);
@@ -135,13 +135,13 @@ describe("RedisStore", () => {
 
   it("should mset", async () => {
     await store.mset("key1", "key1:value", "key2", "key2:value", "key3", "key3:value", { ttl: 1000 });
-    await expect(store.keys()).resolves.toEqual(["cache:key1", "cache:key2", "cache:key3"]);
+    await expect(store.keys()).resolves.toEqual(["key1", "key2", "key3"]);
     await expect(store.mget(...["key1", "key2", "key3"])).resolves.toEqual(["key1:value", "key2:value", "key3:value"]);
   });
 
   it("should mset with options", async () => {
     await store.mset("key1", "key1:value", "key2", "key2:value", "key3", "key3:value", { ttl: "1234" });
-    await expect(store.keys()).resolves.toEqual(["cache:key1", "cache:key2", "cache:key3"]);
+    await expect(store.keys()).resolves.toEqual(["key1", "key2", "key3"]);
     await expect(store.mget(...["key1", "key2", "key3"])).resolves.toEqual(["key1:value", "key2:value", "key3:value"]);
   });
 });
