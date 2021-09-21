@@ -123,6 +123,7 @@ export class RedisStore implements CacheManager {
   @CallbackDecorator()
   public async mget<T>(...keys: string[]): Promise<Array<T | undefined>> {
     const map = new Map<string, T | undefined>(keys.map((key) => [key, undefined]));
+
     if (this.memoryCache) {
       for (const key of keys) {
         if (!key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
@@ -134,14 +135,15 @@ export class RedisStore implements CacheManager {
 
     const notFoundKeys = [...map.keys()].filter((key) => map.get(key) === undefined);
 
-    const results = (await this.redisCache.mget(...notFoundKeys)) as Array<string | undefined>;
+    if (notFoundKeys.length !== 0) {
+      const results = (await this.redisCache.mget(...notFoundKeys)) as Array<string | undefined>;
 
-    for (let index = 0; index < notFoundKeys.length; index++) {
-      if (results[index] !== undefined && results[index] !== null) {
-        map.set(notFoundKeys[index], parseJSON<T>(results[index]));
+      for (let index = 0; index < notFoundKeys.length; index++) {
+        if (results[index] !== undefined && results[index] !== null) {
+          map.set(notFoundKeys[index], parseJSON<T>(results[index]));
+        }
       }
     }
-
     return [...map.values()];
   }
 
