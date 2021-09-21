@@ -1,6 +1,6 @@
 {
   "name": "@anchan828/nest-cache-common",
-  "version": "0.5.11",
+  "version": "0.6.0",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
