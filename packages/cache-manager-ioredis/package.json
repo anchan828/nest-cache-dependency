@@ -31,7 +31,7 @@
     "ioredis": "4.28.0"
   },
   "devDependencies": {
-    "@nestjs/common": "8.1.1",
+    "@nestjs/common": "8.1.2",
     "@types/cache-manager": "3.4.2",
     "@types/ioredis": "4.27.8",
     "@types/lru-cache": "5.1.1",
