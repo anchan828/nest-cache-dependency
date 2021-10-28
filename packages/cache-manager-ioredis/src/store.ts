@@ -43,7 +43,7 @@ export class RedisStore implements CacheManager {
     }
 
     if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
-      this.memoryCache.set(key, value);
+      this.memoryCache.set(key, Object.assign({}, value));
     }
 
     const json = JSON.stringify(value);
