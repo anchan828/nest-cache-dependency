@@ -44,6 +44,7 @@ export class RedisStore implements CacheManager {
 
     if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
       this.memoryCache.set(key, value);
+      await this.args.inMemory?.setCache?.(key, value);
     }
 
     const json = JSON.stringify(value);
@@ -71,6 +72,7 @@ export class RedisStore implements CacheManager {
     }
 
     if (!isNullOrUndefined(result)) {
+      await this.args.inMemory?.hitCache?.(key);
       return result;
     }
 
@@ -84,6 +86,7 @@ export class RedisStore implements CacheManager {
 
     if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
       this.memoryCache.set(key, result);
+      await this.args.inMemory?.setCache?.(key, result);
     }
 
     return result;
@@ -193,9 +196,11 @@ export class RedisStore implements CacheManager {
 
   public async close(): Promise<void> {
     await this.redisCache.quit();
-    if (this.args.enabledInMemory && this.memoryCacheIntervalId) {
+    if (this.args.enabledInMemory || this.args.inMemory?.enabled) {
       this.memoryCache?.reset();
-      clearInterval(this.memoryCacheIntervalId);
+      if (this.memoryCacheIntervalId) {
+        clearInterval(this.memoryCacheIntervalId);
+      }
     }
   }
 
