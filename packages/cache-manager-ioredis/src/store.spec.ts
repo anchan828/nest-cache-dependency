@@ -1,7 +1,8 @@
 import { CacheManager } from "@anchan828/nest-cache-common";
-import { caching } from "cache-manager";
+import { caching, StoreConfig } from "cache-manager";
 import * as Redis from "ioredis";
 import { RedisStore, redisStore } from "./store";
+import { RedisStoreArgs } from "./store.interface";
 describe("RedisStore", () => {
   let store: CacheManager;
   let redis: RedisStore;
@@ -149,13 +150,21 @@ describe("RedisStore", () => {
 describe("In-memory cache", () => {
   let store: CacheManager;
   let redis: RedisStore;
+  let hitCacheFn: jest.Mock<any, any>;
+  let setCacheFn: jest.Mock<any, any>;
   beforeEach(async () => {
+    hitCacheFn = jest.fn();
+    setCacheFn = jest.fn();
     store = caching({
-      store: redisStore,
+      store: redisStore as any,
       host: process.env.REDIS_HOST || "localhost",
       ttl: 5,
-      enabledInMemory: true,
-    } as any) as any as CacheManager;
+      inMemory: {
+        enabled: true,
+        hitCache: hitCacheFn,
+        setCache: setCacheFn,
+      },
+    } as StoreConfig & RedisStoreArgs) as unknown as CacheManager;
 
     await store.reset();
     redis = (store as any).store;
@@ -168,23 +177,22 @@ describe("In-memory cache", () => {
 
   it("should get from in-memory", async () => {
     const key = "key";
-    await store.set(key, key);
+    const value = "value";
 
-    // from redis
+    expect(hitCacheFn).toBeCalledTimes(0);
+    expect(setCacheFn).toBeCalledTimes(0);
+
+    await store.set(key, value);
+
+    expect(hitCacheFn).toBeCalledTimes(0);
+    expect(setCacheFn).toBeCalledTimes(1);
+    expect(setCacheFn).lastCalledWith(key, value);
+
     await store.get(key);
 
-    // from in-memory
-    await store.get(key);
-  });
-
-  it("should get from in-memory", async () => {
-    const key = "key";
-    await store.set(key, key);
-
-    // from redis
-    await store.get(key);
-
-    // from in-memory
-    await store.get(key);
+    expect(hitCacheFn).toBeCalledTimes(1);
+    expect(setCacheFn).toBeCalledTimes(1);
+    expect(hitCacheFn).lastCalledWith(key);
+    expect(setCacheFn).lastCalledWith(key, value);
   });
 });

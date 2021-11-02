@@ -30,6 +30,16 @@ export interface RedisStoreArgs extends RedisOptions {
     enabled?: boolean;
     ttl?: number;
     pruneInterval?: number;
+
+    /**
+     * Called when the in-memory cache is hit.
+     */
+    hitCache?: (key: string) => void | Promise<void>;
+
+    /**
+     * Called when a cache is saved to the in-memory.
+     */
+    setCache?: (key: string, value: any) => void | Promise<void>;
   };
 }
 
