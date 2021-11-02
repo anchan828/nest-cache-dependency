@@ -196,9 +196,11 @@ export class RedisStore implements CacheManager {
 
   public async close(): Promise<void> {
     await this.redisCache.quit();
-    if (this.args.enabledInMemory && this.memoryCacheIntervalId) {
+    if (this.args.enabledInMemory || this.args.inMemory?.enabled) {
       this.memoryCache?.reset();
-      clearInterval(this.memoryCacheIntervalId);
+      if (this.memoryCacheIntervalId) {
+        clearInterval(this.memoryCacheIntervalId);
+      }
     }
   }
 
