@@ -27,7 +27,7 @@
   "homepage": "https://github.com/anchan828/nest-cache-dependency#readme",
   "devDependencies": {
     "@nestjs/common": "8.2.0",
-    "cache-manager": "3.4.4",
+    "cache-manager": "3.5.0",
     "rxjs": "7.4.0"
   },
   "peerDependencies": {
