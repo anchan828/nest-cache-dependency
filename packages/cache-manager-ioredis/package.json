@@ -27,7 +27,7 @@
   "homepage": "https://github.com/anchan828/nest-cache-dependency#readme",
   "dependencies": {
     "@anchan828/nest-cache-common": "^0.6.9",
-    "cache-manager": "3.4.4",
+    "cache-manager": "3.5.0",
     "ioredis": "4.28.0"
   },
   "devDependencies": {
