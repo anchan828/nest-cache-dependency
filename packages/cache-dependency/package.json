@@ -42,7 +42,7 @@
     "@types/route-parser": "0.1.4",
     "ioredis": "4.28.2",
     "lru-cache": "6.0.0",
-    "rxjs": "7.4.0",
+    "rxjs": "7.5.0",
     "typed-emitter": "1.4.0"
   },
   "peerDependencies": {
