@@ -1,5 +1,7 @@
+import { CacheManager } from "@anchan828/nest-cache-common";
 import {
   CacheModule,
+  CACHE_MANAGER,
   DynamicModule,
   Global,
   Inject,
@@ -32,6 +34,8 @@ export class CacheDependencyModule implements OnModuleInit, OnModuleDestroy {
   private pubsubServices: CacheDependencyPubSubService[] = [];
 
   constructor(
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: CacheManager,
     private readonly emitter: CacheDependencyEventEmitter,
     @Inject(CACHE_DEPENDENCY_MODULE_OPTIONS)
     private readonly options: CacheDependencyModuleOptions,
@@ -53,6 +57,8 @@ export class CacheDependencyModule implements OnModuleInit, OnModuleDestroy {
     for (const pubsubService of this.pubsubServices) {
       await pubsubService.close();
     }
+    this.emitter.removeAllListeners();
+    await this.cacheManager?.store?.close?.();
   }
 
   /**

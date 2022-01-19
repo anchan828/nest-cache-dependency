@@ -16,4 +16,5 @@ export type CacheManager = CacheStore & {
    */
   mset<T>(...keyOrValues: Array<string | T | CacheManagerSetOptions>): Promise<void>;
   del(...keys: string[]): Promise<void>;
+  store?: any;
 };
