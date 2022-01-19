@@ -43,7 +43,7 @@
     "ioredis": "4.28.3",
     "lru-cache": "6.0.0",
     "rxjs": "7.5.2",
-    "typed-emitter": "1.4.0"
+    "typed-emitter": "2.0.0"
   },
   "peerDependencies": {
     "@nestjs/common": "^8.0.0"
