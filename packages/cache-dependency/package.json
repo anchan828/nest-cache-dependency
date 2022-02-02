@@ -41,7 +41,7 @@
     "@types/ioredis": "4.28.7",
     "@types/lru-cache": "5.1.1",
     "@types/route-parser": "0.1.4",
-    "ioredis": "4.28.3",
+    "ioredis": "4.28.4",
     "lru-cache": "6.0.0",
     "rxjs": "7.5.2"
   },
