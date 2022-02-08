@@ -43,7 +43,7 @@
     "@types/route-parser": "0.1.4",
     "ioredis": "4.28.5",
     "lru-cache": "6.0.0",
-    "rxjs": "7.5.2"
+    "rxjs": "7.5.3"
   },
   "peerDependencies": {
     "@nestjs/common": "^8.0.0"
