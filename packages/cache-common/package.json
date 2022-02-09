@@ -28,7 +28,7 @@
   "devDependencies": {
     "@nestjs/common": "8.2.6",
     "cache-manager": "3.6.0",
-    "rxjs": "7.5.3"
+    "rxjs": "7.5.4"
   },
   "peerDependencies": {
     "@nestjs/common": "^8.0.0"
