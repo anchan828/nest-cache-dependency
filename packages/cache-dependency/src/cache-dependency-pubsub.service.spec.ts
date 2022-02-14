@@ -49,7 +49,7 @@ describe("CacheDependencyPubSubService", () => {
         .map((app) => app.get(CacheDependencyService)["cacheManager"])
         .map((manager) => Reflect.get(manager, "store")?.memoryCache)
         .filter((lru): lru is LRUCache<string, any> => lru)
-        .map((lru) => lru.keys()),
+        .map((lru) => Array.from(lru.keys())),
     ).toEqual([
       ["key1", "key2"],
       ["key1", "key2"],
@@ -68,7 +68,7 @@ describe("CacheDependencyPubSubService", () => {
         .map((app) => app.get(CacheDependencyService)["cacheManager"])
         .map((manager) => Reflect.get(manager, "store")?.memoryCache)
         .filter((lru): lru is LRUCache<string, any> => lru)
-        .map((lru) => lru.values()),
+        .map((lru) => Array.from(lru.values())),
     ).toEqual([
       ["A", "B"],
       ["A", "B"],
@@ -91,7 +91,7 @@ describe("CacheDependencyPubSubService", () => {
         .map((app) => app.get(CacheDependencyService)["cacheManager"])
         .map((manager) => Reflect.get(manager, "store")?.memoryCache)
         .filter((lru): lru is LRUCache<string, any> => lru)
-        .map((lru) => lru.values()),
+        .map((lru) => Array.from(lru.values())),
     ).toEqual([[], [], [], [], [], [], [], [], [], []]);
   });
 });

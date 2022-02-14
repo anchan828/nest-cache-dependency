@@ -69,13 +69,26 @@ declare module "lru-cache" {
 
     /**
      * Deletes a key out of the cache.
+     * @deprecated Use delete instead.
      */
     del(key: K): void;
 
     /**
+     * Deletes a key out of the cache.
+     */
+    delete(key: K): void;
+
+    /**
+     * Clear the cache entirely, throwing away all values.
+     * @deprecated Use clear instead.
+     */
+
+    reset(): void;
+
+    /**
      * Clear the cache entirely, throwing away all values.
      */
-    reset(): void;
+    clear(): void;
 
     /**
      * Manually iterates over the entire cache proactively pruning old entries.

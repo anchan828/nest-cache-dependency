@@ -98,7 +98,7 @@ export class RedisStore implements CacheManager {
   @DelCallbackDecorator()
   public async del(...keys: string[]): Promise<void> {
     if (this.memoryCache) {
-      keys.forEach((key) => this.memoryCache?.del(key));
+      keys.forEach((key) => this.memoryCache?.delete(key));
     }
     await this.redisCache.del(...keys);
   }
@@ -118,7 +118,7 @@ export class RedisStore implements CacheManager {
   @DelCallbackDecorator()
   public async reset(): Promise<void> {
     if (this.memoryCache) {
-      this.memoryCache.reset();
+      this.memoryCache.clear();
     }
     const keys = await this.keys();
     if (keys.length !== 0) {
@@ -210,7 +210,7 @@ export class RedisStore implements CacheManager {
   public async close(): Promise<void> {
     await this.redisCache.quit();
     if (this.args.enabledInMemory || this.args.inMemory?.enabled) {
-      this.memoryCache?.reset();
+      this.memoryCache?.clear();
       if (this.memoryCacheIntervalId) {
         clearInterval(this.memoryCacheIntervalId);
       }

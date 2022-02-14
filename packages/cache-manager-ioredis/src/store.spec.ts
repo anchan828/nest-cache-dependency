@@ -235,10 +235,9 @@ describe("In-memory cache", () => {
 
     expect(hitCacheFn.mock.calls).toEqual([]);
     expect(setCacheFn.mock.calls).toEqual([[key, value, 5]]);
-
     expect(redis["memoryCache"]?.get(key)).toEqual(value);
 
-    redis["memoryCache"]?.reset();
+    redis["memoryCache"]?.clear();
 
     expect(redis["memoryCache"]?.get(key)).toBeUndefined();
 
