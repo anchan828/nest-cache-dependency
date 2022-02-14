@@ -42,13 +42,6 @@ export class RedisStore implements CacheManager {
       return;
     }
 
-    if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
-      this.memoryCache.set(key, value);
-      await this.args.inMemory?.setCache?.(key, value);
-    }
-
-    const json = JSON.stringify(value);
-
     let ttl: number | undefined;
 
     if (options && options.ttl) {
@@ -57,10 +50,17 @@ export class RedisStore implements CacheManager {
       ttl = this.args.ttl;
     }
 
+    const json = JSON.stringify(value);
+
     if (ttl !== undefined && ttl !== null && ttl !== -1) {
       await this.redisCache.setex(key, ttl, json);
     } else {
       await this.redisCache.set(key, json);
+    }
+
+    if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
+      this.memoryCache.set(key, value, Math.max(0, (ttl || 0) * 1000));
+      await this.args.inMemory?.setCache?.(key, value, ttl);
     }
   }
 
@@ -85,8 +85,11 @@ export class RedisStore implements CacheManager {
     result = parseJSON<T>(rawResult);
 
     if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
-      this.memoryCache.set(key, result);
-      await this.args.inMemory?.setCache?.(key, result);
+      const ttl = await this.redisCache.ttl(key);
+      if (ttl !== 0) {
+        this.memoryCache.set(key, result, Math.max(0, (ttl || 0) * 1000));
+        await this.args.inMemory?.setCache?.(key, result, ttl);
+      }
     }
 
     return result;
@@ -132,6 +135,7 @@ export class RedisStore implements CacheManager {
         if (!key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
           const result = this.memoryCache.get(key);
           map.set(key, result);
+          await this.args.inMemory?.hitCache?.(key);
         }
       }
     }
@@ -170,12 +174,6 @@ export class RedisStore implements CacheManager {
           continue;
         }
 
-        if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
-          this.memoryCache.set(key, value);
-        }
-
-        const json = JSON.stringify(value);
-
         let ttl: number | undefined;
 
         if (options && options.ttl) {
@@ -183,6 +181,13 @@ export class RedisStore implements CacheManager {
         } else if (this.args.ttl) {
           ttl = this.args.ttl;
         }
+
+        if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
+          this.memoryCache.set(key, value, Math.max(0, (ttl || 0) * 1000));
+          await this.args.inMemory?.setCache?.(key, value, ttl);
+        }
+
+        const json = JSON.stringify(value);
 
         if (ttl !== undefined && ttl !== null && ttl !== -1) {
           pipeline.setex(key, ttl, json);

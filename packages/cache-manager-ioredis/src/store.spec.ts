@@ -1,6 +1,7 @@
 import { CacheManager } from "@anchan828/nest-cache-common";
 import { caching, StoreConfig } from "cache-manager";
 import * as Redis from "ioredis";
+import { setTimeout } from "timers/promises";
 import { RedisStore, redisStore } from "./store";
 import { RedisStoreArgs } from "./store.interface";
 describe("RedisStore", () => {
@@ -179,20 +180,77 @@ describe("In-memory cache", () => {
     const key = "key";
     const value = "value";
 
-    expect(hitCacheFn).toBeCalledTimes(0);
-    expect(setCacheFn).toBeCalledTimes(0);
+    expect(hitCacheFn.mock.calls).toEqual([]);
+    expect(setCacheFn.mock.calls).toEqual([]);
 
     await store.set(key, value);
 
-    expect(hitCacheFn).toBeCalledTimes(0);
-    expect(setCacheFn).toBeCalledTimes(1);
-    expect(setCacheFn).lastCalledWith(key, value);
+    expect(hitCacheFn.mock.calls).toEqual([]);
+    expect(setCacheFn.mock.calls).toEqual([[key, value, 5]]);
 
-    await store.get(key);
+    await expect(store.get(key)).resolves.toEqual(value);
 
-    expect(hitCacheFn).toBeCalledTimes(1);
-    expect(setCacheFn).toBeCalledTimes(1);
-    expect(hitCacheFn).lastCalledWith(key);
-    expect(setCacheFn).lastCalledWith(key, value);
+    expect(hitCacheFn.mock.calls).toEqual([[key]]);
+    expect(setCacheFn.mock.calls).toEqual([[key, value, 5]]);
+  });
+
+  it("should clear in-memory cache", async () => {
+    const key = "key";
+    const value = "value";
+
+    expect(hitCacheFn.mock.calls).toEqual([]);
+    expect(setCacheFn.mock.calls).toEqual([]);
+
+    await store.set(key, value, { ttl: 1 });
+
+    expect(hitCacheFn.mock.calls).toEqual([]);
+    expect(setCacheFn.mock.calls).toEqual([[key, value, 1]]);
+
+    await expect(store.get(key)).resolves.toEqual(value);
+
+    expect(hitCacheFn.mock.calls).toEqual([[key]]);
+    expect(setCacheFn.mock.calls).toEqual([[key, value, 1]]);
+
+    await expect(store.get(key)).resolves.toEqual(value);
+
+    expect(hitCacheFn.mock.calls).toEqual([[key], [key]]);
+    expect(setCacheFn.mock.calls).toEqual([[key, value, 1]]);
+
+    await setTimeout(1500);
+
+    await expect(store.get(key)).resolves.toBeUndefined();
+
+    expect(hitCacheFn.mock.calls).toEqual([[key], [key]]);
+    expect(setCacheFn.mock.calls).toEqual([[key, value, 1]]);
+  });
+
+  it("should use ttl of redis", async () => {
+    const key = "key";
+    const value = "value";
+
+    expect(hitCacheFn.mock.calls).toEqual([]);
+    expect(setCacheFn.mock.calls).toEqual([]);
+
+    await store.set(key, value);
+
+    expect(hitCacheFn.mock.calls).toEqual([]);
+    expect(setCacheFn.mock.calls).toEqual([[key, value, 5]]);
+
+    expect(redis["memoryCache"]?.itemCount).toEqual(1);
+    redis["memoryCache"]?.reset();
+    expect(redis["memoryCache"]?.itemCount).toEqual(0);
+
+    await setTimeout(1100);
+
+    await expect(store.get(key)).resolves.toEqual(value);
+
+    expect(hitCacheFn.mock.calls).toEqual([]);
+    expect(setCacheFn.mock.calls).toEqual([
+      [key, value, 5],
+      [key, value, expect.any(Number)],
+    ]);
+
+    // Redundant checks are performed since the actual measured values vary depending on the machine specs.
+    expect(setCacheFn.mock.calls[1][2] < 5).toBeTruthy();
   });
 });
