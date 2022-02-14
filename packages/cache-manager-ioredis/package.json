@@ -32,7 +32,7 @@
     "lru-cache": "7.3.1"
   },
   "devDependencies": {
-    "@nestjs/common": "8.2.6",
+    "@nestjs/common": "8.3.0",
     "@types/cache-manager": "3.4.2",
     "@types/ioredis": "4.28.8",
     "rxjs": "7.5.4"
