@@ -28,13 +28,13 @@
   "dependencies": {
     "@anchan828/nest-cache-common": "^0.6.24",
     "cache-manager": "3.6.0",
-    "ioredis": "4.28.5"
+    "ioredis": "4.28.5",
+    "lru-cache": "7.3.1"
   },
   "devDependencies": {
     "@nestjs/common": "8.2.6",
     "@types/cache-manager": "3.4.2",
     "@types/ioredis": "4.28.8",
-    "lru-cache": "7.3.1",
     "rxjs": "7.5.4"
   },
   "peerDependencies": {
