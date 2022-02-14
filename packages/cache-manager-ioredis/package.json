@@ -39,6 +39,7 @@
     "rxjs": "7.5.4"
   },
   "peerDependencies": {
-    "@nestjs/common": "^8.0.0"
+    "@nestjs/common": "^8.0.0",
+    "lru-cache": "^7.0.0"
   }
 }
