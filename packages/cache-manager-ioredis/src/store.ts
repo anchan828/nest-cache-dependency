@@ -24,9 +24,9 @@ export class RedisStore implements CacheManager {
   constructor(private readonly args: RedisStoreArgs) {
     if (args.enabledInMemory || args.inMemory?.enabled) {
       this.memoryCache = new LRUCache<string, any>({
-        max: Number.MAX_SAFE_INTEGER,
-        maxAge: (args.inMemoryTTL || args.inMemory?.ttl || 5) * 1000,
-      });
+        max: args.inMemory?.max || 100000,
+        ttl: (args.inMemoryTTL || args.inMemory?.ttl || 5) * 1000,
+      } as any);
 
       this.memoryCacheIntervalId = setInterval(
         () => this.memoryCache?.prune(),
@@ -58,8 +58,8 @@ export class RedisStore implements CacheManager {
       await this.redisCache.set(key, json);
     }
 
-    if (this.enableMemoryCache(this.memoryCache, key)) {
-      this.memoryCache.set(key, value, Math.max(0, (ttl || 0) * 1000));
+    if (this.enableMemoryCache(this.memoryCache, key) && ttl !== 0) {
+      this.memoryCache.set(key, value, { ttl: Math.max(0, (ttl || 0) * 1000) });
       await this.args.inMemory?.setCache?.(key, value, ttl);
     }
   }
@@ -87,7 +87,7 @@ export class RedisStore implements CacheManager {
     if (this.enableMemoryCache(this.memoryCache, key)) {
       const ttl = await this.redisCache.ttl(key);
       if (ttl !== 0) {
-        this.memoryCache.set(key, result, Math.max(0, (ttl || 0) * 1000));
+        this.memoryCache.set(key, result, { ttl: Math.max(0, (ttl || 0) * 1000) });
         await this.args.inMemory?.setCache?.(key, result, ttl);
       }
     }
@@ -152,7 +152,7 @@ export class RedisStore implements CacheManager {
           if (this.enableMemoryCache(this.memoryCache, key)) {
             const ttl = await this.redisCache.ttl(key);
             if (ttl !== 0) {
-              this.memoryCache.set(key, value, Math.max(0, (ttl || 0) * 1000));
+              this.memoryCache.set(key, value, { ttl: Math.max(0, (ttl || 0) * 1000) });
               await this.args.inMemory?.setCache?.(key, value, ttl);
             }
           }
@@ -191,7 +191,7 @@ export class RedisStore implements CacheManager {
         }
 
         if (this.enableMemoryCache(this.memoryCache, key)) {
-          this.memoryCache.set(key, value, Math.max(0, (ttl || 0) * 1000));
+          this.memoryCache.set(key, value, { ttl: Math.max(0, (ttl || 0) * 1000) });
           await this.args.inMemory?.setCache?.(key, value, ttl);
         }
 
