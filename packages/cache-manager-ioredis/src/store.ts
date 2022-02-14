@@ -24,7 +24,8 @@ export class RedisStore implements CacheManager {
   constructor(private readonly args: RedisStoreArgs) {
     if (args.enabledInMemory || args.inMemory?.enabled) {
       this.memoryCache = new LRUCache<string, any>({
-        max: args.inMemory?.max || 100000,
+        max: args.inMemory?.max || Math.pow(2, 16),
+        maxSize: args.inMemory?.max || Math.pow(2, 16),
         ttl: (args.inMemoryTTL || args.inMemory?.ttl || 5) * 1000,
       });
 
