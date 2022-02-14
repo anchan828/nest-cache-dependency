@@ -26,7 +26,7 @@ export class RedisStore implements CacheManager {
       this.memoryCache = new LRUCache<string, any>({
         max: args.inMemory?.max || 100000,
         ttl: (args.inMemoryTTL || args.inMemory?.ttl || 5) * 1000,
-      } as any);
+      });
 
       this.memoryCacheIntervalId = setInterval(
         () => this.memoryCache?.prune(),
@@ -59,7 +59,7 @@ export class RedisStore implements CacheManager {
     }
 
     if (this.enableMemoryCache(this.memoryCache, key) && ttl !== 0) {
-      this.memoryCache.set(key, value, { ttl: Math.max(0, (ttl || 0) * 1000) });
+      this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
       await this.args.inMemory?.setCache?.(key, value, ttl);
     }
   }
@@ -87,7 +87,7 @@ export class RedisStore implements CacheManager {
     if (this.enableMemoryCache(this.memoryCache, key)) {
       const ttl = await this.redisCache.ttl(key);
       if (ttl !== 0) {
-        this.memoryCache.set(key, result, { ttl: Math.max(0, (ttl || 0) * 1000) });
+        this.memoryCache.set(key, result, { ttl: this.getImMemoryTTL(ttl) });
         await this.args.inMemory?.setCache?.(key, result, ttl);
       }
     }
@@ -152,7 +152,7 @@ export class RedisStore implements CacheManager {
           if (this.enableMemoryCache(this.memoryCache, key)) {
             const ttl = await this.redisCache.ttl(key);
             if (ttl !== 0) {
-              this.memoryCache.set(key, value, { ttl: Math.max(0, (ttl || 0) * 1000) });
+              this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
               await this.args.inMemory?.setCache?.(key, value, ttl);
             }
           }
@@ -191,7 +191,7 @@ export class RedisStore implements CacheManager {
         }
 
         if (this.enableMemoryCache(this.memoryCache, key)) {
-          this.memoryCache.set(key, value, { ttl: Math.max(0, (ttl || 0) * 1000) });
+          this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
           await this.args.inMemory?.setCache?.(key, value, ttl);
         }
 
@@ -230,6 +230,15 @@ export class RedisStore implements CacheManager {
     }
 
     return !!memoryCache;
+  }
+
+  private getImMemoryTTL(redisTTL?: number): number {
+    if (redisTTL === -1) {
+      redisTTL = Number.MAX_SAFE_INTEGER;
+    }
+
+    const ttl = Math.max(0, redisTTL || 0);
+    return Math.min(ttl, this.args.inMemoryTTL || this.args.inMemory?.ttl || 5) * 1000;
   }
 }
 
