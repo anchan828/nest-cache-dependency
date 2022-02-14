@@ -30,7 +30,7 @@ export interface RedisStoreArgs extends RedisOptions {
     enabled?: boolean;
     ttl?: number;
     pruneInterval?: number;
-
+    max?: number;
     /**
      * Called when the in-memory cache is hit.
      */

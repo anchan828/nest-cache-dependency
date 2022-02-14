@@ -24,9 +24,9 @@ export class RedisStore implements CacheManager {
   constructor(private readonly args: RedisStoreArgs) {
     if (args.enabledInMemory || args.inMemory?.enabled) {
       this.memoryCache = new LRUCache<string, any>({
-        max: Number.MAX_SAFE_INTEGER,
-        maxAge: (args.inMemoryTTL || args.inMemory?.ttl || 5) * 1000,
-      });
+        max: args.inMemory?.max || 100000,
+        ttl: (args.inMemoryTTL || args.inMemory?.ttl || 5) * 1000,
+      } as any);
 
       this.memoryCacheIntervalId = setInterval(
         () => this.memoryCache?.prune(),
@@ -58,8 +58,8 @@ export class RedisStore implements CacheManager {
       await this.redisCache.set(key, json);
     }
 
-    if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
-      this.memoryCache.set(key, value, Math.max(0, (ttl || 0) * 1000));
+    if (this.enableMemoryCache(this.memoryCache, key) && ttl !== 0) {
+      this.memoryCache.set(key, value, { ttl: Math.max(0, (ttl || 0) * 1000) });
       await this.args.inMemory?.setCache?.(key, value, ttl);
     }
   }
@@ -67,7 +67,7 @@ export class RedisStore implements CacheManager {
   @CallbackDecorator()
   public async get<T>(key: string): Promise<T | undefined> {
     let result: T | null | undefined;
-    if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
+    if (this.enableMemoryCache(this.memoryCache, key)) {
       result = this.memoryCache.get(key);
     }
 
@@ -84,10 +84,10 @@ export class RedisStore implements CacheManager {
 
     result = parseJSON<T>(rawResult);
 
-    if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
+    if (this.enableMemoryCache(this.memoryCache, key)) {
       const ttl = await this.redisCache.ttl(key);
       if (ttl !== 0) {
-        this.memoryCache.set(key, result, Math.max(0, (ttl || 0) * 1000));
+        this.memoryCache.set(key, result, { ttl: Math.max(0, (ttl || 0) * 1000) });
         await this.args.inMemory?.setCache?.(key, result, ttl);
       }
     }
@@ -98,7 +98,7 @@ export class RedisStore implements CacheManager {
   @DelCallbackDecorator()
   public async del(...keys: string[]): Promise<void> {
     if (this.memoryCache) {
-      keys.forEach((key) => this.memoryCache?.del(key));
+      keys.forEach((key) => this.memoryCache?.delete(key));
     }
     await this.redisCache.del(...keys);
   }
@@ -118,7 +118,7 @@ export class RedisStore implements CacheManager {
   @DelCallbackDecorator()
   public async reset(): Promise<void> {
     if (this.memoryCache) {
-      this.memoryCache.reset();
+      this.memoryCache.clear();
     }
     const keys = await this.keys();
     if (keys.length !== 0) {
@@ -130,13 +130,11 @@ export class RedisStore implements CacheManager {
   public async mget<T>(...keys: string[]): Promise<Array<T | undefined>> {
     const map = new Map<string, T | undefined>(keys.map((key) => [key, undefined]));
 
-    if (this.memoryCache) {
-      for (const key of keys) {
-        if (!key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
-          const result = this.memoryCache.get(key);
-          map.set(key, result);
-          await this.args.inMemory?.hitCache?.(key);
-        }
+    for (const key of keys) {
+      if (this.enableMemoryCache(this.memoryCache, key)) {
+        const result = this.memoryCache.get(key);
+        map.set(key, result);
+        await this.args.inMemory?.hitCache?.(key);
       }
     }
 
@@ -147,7 +145,17 @@ export class RedisStore implements CacheManager {
 
       for (let index = 0; index < notFoundKeys.length; index++) {
         if (results[index] !== undefined && results[index] !== null) {
-          map.set(notFoundKeys[index], parseJSON<T>(results[index]));
+          const key = notFoundKeys[index];
+          const value = parseJSON<T>(results[index]);
+          map.set(key, value);
+
+          if (this.enableMemoryCache(this.memoryCache, key)) {
+            const ttl = await this.redisCache.ttl(key);
+            if (ttl !== 0) {
+              this.memoryCache.set(key, value, { ttl: Math.max(0, (ttl || 0) * 1000) });
+              await this.args.inMemory?.setCache?.(key, value, ttl);
+            }
+          }
         }
       }
     }
@@ -182,8 +190,8 @@ export class RedisStore implements CacheManager {
           ttl = this.args.ttl;
         }
 
-        if (this.memoryCache && !key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
-          this.memoryCache.set(key, value, Math.max(0, (ttl || 0) * 1000));
+        if (this.enableMemoryCache(this.memoryCache, key)) {
+          this.memoryCache.set(key, value, { ttl: Math.max(0, (ttl || 0) * 1000) });
           await this.args.inMemory?.setCache?.(key, value, ttl);
         }
 
@@ -202,7 +210,7 @@ export class RedisStore implements CacheManager {
   public async close(): Promise<void> {
     await this.redisCache.quit();
     if (this.args.enabledInMemory || this.args.inMemory?.enabled) {
-      this.memoryCache?.reset();
+      this.memoryCache?.clear();
       if (this.memoryCacheIntervalId) {
         clearInterval(this.memoryCacheIntervalId);
       }
@@ -211,6 +219,17 @@ export class RedisStore implements CacheManager {
 
   private isObject(value: any): value is Object {
     return value instanceof Object && value.constructor === Object;
+  }
+
+  private enableMemoryCache(
+    memoryCache: LRUCache<string, any> | undefined,
+    key: string,
+  ): memoryCache is LRUCache<string, any> {
+    if (key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
+      return false;
+    }
+
+    return !!memoryCache;
   }
 }
 
