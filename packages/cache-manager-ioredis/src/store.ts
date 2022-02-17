@@ -8,8 +8,8 @@ import {
 } from "@anchan828/nest-cache-common";
 import { CacheStore, CacheStoreFactory, LiteralObject } from "@nestjs/common";
 import * as Redis from "ioredis";
-import * as LRUCache from "lru-cache";
 import { CACHE_STORE_NAME } from "./constants";
+import { InMemoryCacheService } from "./in-memory-cache.service";
 import { CallbackDecorator, DelCallbackDecorator } from "./store.decorator";
 import { RedisStoreArgs } from "./store.interface";
 export class RedisStore implements CacheManager {
@@ -17,13 +17,13 @@ export class RedisStore implements CacheManager {
 
   public readonly name: string = CACHE_STORE_NAME;
 
-  private readonly memoryCache?: LRUCache<string, any>;
+  private readonly memoryCache?: InMemoryCacheService;
 
   private readonly memoryCacheIntervalId?: NodeJS.Timeout;
 
   constructor(private readonly args: RedisStoreArgs) {
     if (args.enabledInMemory || args.inMemory?.enabled) {
-      this.memoryCache = new LRUCache<string, any>({
+      this.memoryCache = new InMemoryCacheService({
         max: args.inMemory?.max || Math.pow(2, 16),
         maxSize: args.inMemory?.max || Math.pow(2, 16),
         ttl: (args.inMemoryTTL || args.inMemory?.ttl || 5) * 1000,
@@ -60,8 +60,8 @@ export class RedisStore implements CacheManager {
     }
 
     if (this.enableMemoryCache(this.memoryCache, key) && ttl !== 0) {
-      this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
-      await this.args.inMemory?.setCache?.(key, value, ttl);
+      const cachedValue = this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
+      await this.args.inMemory?.setCache?.(key, cachedValue, ttl);
     }
   }
 
@@ -88,8 +88,8 @@ export class RedisStore implements CacheManager {
     if (this.enableMemoryCache(this.memoryCache, key)) {
       const ttl = await this.redisCache.ttl(key);
       if (ttl !== 0) {
-        this.memoryCache.set(key, result, { ttl: this.getImMemoryTTL(ttl) });
-        await this.args.inMemory?.setCache?.(key, result, ttl);
+        const cachedValue = this.memoryCache.set(key, result, { ttl: this.getImMemoryTTL(ttl) });
+        await this.args.inMemory?.setCache?.(key, cachedValue, ttl);
       }
     }
 
@@ -133,7 +133,7 @@ export class RedisStore implements CacheManager {
 
     for (const key of keys) {
       if (this.enableMemoryCache(this.memoryCache, key)) {
-        const result = this.memoryCache.get(key);
+        const result = this.memoryCache.get<T>(key);
         map.set(key, result);
         await this.args.inMemory?.hitCache?.(key);
       }
@@ -153,8 +153,8 @@ export class RedisStore implements CacheManager {
           if (this.enableMemoryCache(this.memoryCache, key)) {
             const ttl = await this.redisCache.ttl(key);
             if (ttl !== 0) {
-              this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
-              await this.args.inMemory?.setCache?.(key, value, ttl);
+              const cachedValue = this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
+              await this.args.inMemory?.setCache?.(key, cachedValue, ttl);
             }
           }
         }
@@ -192,8 +192,8 @@ export class RedisStore implements CacheManager {
         }
 
         if (this.enableMemoryCache(this.memoryCache, key)) {
-          this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
-          await this.args.inMemory?.setCache?.(key, value, ttl);
+          const cachedValue = this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
+          await this.args.inMemory?.setCache?.(key, cachedValue, ttl);
         }
 
         const json = JSON.stringify(value);
@@ -223,9 +223,9 @@ export class RedisStore implements CacheManager {
   }
 
   private enableMemoryCache(
-    memoryCache: LRUCache<string, any> | undefined,
+    memoryCache: InMemoryCacheService | undefined,
     key: string,
-  ): memoryCache is LRUCache<string, any> {
+  ): memoryCache is InMemoryCacheService {
     if (key.startsWith(CACHE_DEPENDENCY_PREFIX_CACHE_KEY)) {
       return false;
     }
