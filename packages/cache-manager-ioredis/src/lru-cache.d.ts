@@ -92,8 +92,14 @@ declare module "lru-cache" {
 
     /**
      * Manually iterates over the entire cache proactively pruning old entries.
+     * @deprecated Use purgeStale instead.
      */
     prune(): void;
+
+    /**
+     * Manually iterates over the entire cache proactively pruning old entries.
+     */
+    purgeStale(): void;
 
     /**
      * Just like `Array.prototype.forEach`. Iterates over all the keys in the cache,

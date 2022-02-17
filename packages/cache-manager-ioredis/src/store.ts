@@ -30,7 +30,7 @@ export class RedisStore implements CacheManager {
       });
 
       this.memoryCacheIntervalId = setInterval(
-        () => this.memoryCache?.prune(),
+        () => this.memoryCache?.purgeStale(),
         args.inMemory?.pruneInterval || 1000 * 10,
       );
     }
