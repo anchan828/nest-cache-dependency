@@ -1,12 +1,10 @@
 import * as LRUCache from "lru-cache";
 import * as rfdc from "rfdc";
-export class InMemoryCacheService {
-  private readonly cache: LRUCache<string, any>;
-
+export class InMemoryCacheService extends LRUCache<string, any> {
   private readonly rfdcClone = rfdc();
 
   constructor(readonly options?: LRUCache.Options<string, any>) {
-    this.cache = new LRUCache(options);
+    super(options);
   }
 
   /**
@@ -21,7 +19,7 @@ export class InMemoryCacheService {
    */
   public set<T>(key: string, value: T, options: LRUCache.SetOptions<T>): T {
     const cacheValue = this.rfdcClone(value);
-    this.cache.set(key, cacheValue, options);
+    super.set(key, cacheValue, options);
     return cacheValue;
   }
 
@@ -34,19 +32,7 @@ export class InMemoryCacheService {
    * @memberof InMemoryCacheService
    */
   public get<V>(key: string): V | undefined {
-    const cacheValue = this.cache.get(key);
+    const cacheValue = super.get(key);
     return this.rfdcClone(cacheValue);
-  }
-
-  public delete(key: string): void {
-    this.cache.delete(key);
-  }
-
-  public prune(): void {
-    this.cache.prune();
-  }
-
-  public clear(): void {
-    this.cache.clear();
   }
 }
