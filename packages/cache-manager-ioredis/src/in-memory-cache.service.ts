@@ -1,9 +1,9 @@
-import * as LRUCache from "lru-cache";
+import { SimpleLRUCache, SimpleLRUCacheOptions, SimpleLRUCacheSetOptions } from "@anchan828/nest-cache-common";
 import * as rfdc from "rfdc";
-export class InMemoryCacheService extends LRUCache<string, any> {
+export class InMemoryCacheService extends SimpleLRUCache<string, any> {
   private readonly rfdcClone = rfdc();
 
-  constructor(readonly options?: LRUCache.Options<string, any>) {
+  constructor(readonly options?: SimpleLRUCacheOptions<string, any>) {
     super(options);
   }
 
@@ -17,7 +17,7 @@ export class InMemoryCacheService extends LRUCache<string, any> {
    * @return {*}  {T}
    * @memberof InMemoryCacheService
    */
-  public set<T>(key: string, value: T, options: LRUCache.SetOptions<T>): T {
+  public set<T>(key: string, value: T, options: SimpleLRUCacheSetOptions<T>): T {
     const cacheValue = this.rfdcClone(value);
     super.set(key, cacheValue, options);
     return cacheValue;
