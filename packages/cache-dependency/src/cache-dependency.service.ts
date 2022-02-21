@@ -188,8 +188,9 @@ export class CacheDependencyService {
    * @return {*}  {Promise<Record<string, any>>}
    * @memberof CacheDependencyService
    */
-  public async getEntries(pattern?: string): Promise<Record<string, any>> {
-    return this.mget(await this.getKeys(pattern));
+  public async getEntries<T>(pattern?: string): Promise<Array<{ key: string; value: T | undefined }>> {
+    const entries = await this.mget<T>(await this.getKeys(pattern));
+    return Object.entries(entries).map(([key, value]) => ({ key, value }));
   }
 
   /**
