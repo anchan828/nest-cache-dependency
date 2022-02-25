@@ -1,4 +1,5 @@
 import * as LRUCache from "lru-cache";
+import { SetOptions } from "lru-cache";
 import * as rfdc from "rfdc";
 export class InMemoryCacheService extends LRUCache<string, any> {
   private readonly rfdcClone = rfdc();
@@ -17,7 +18,7 @@ export class InMemoryCacheService extends LRUCache<string, any> {
    * @return {*}  {T}
    * @memberof InMemoryCacheService
    */
-  public set<T>(key: string, value: T, options: LRUCache.SetOptions<T>): T {
+  public set<T>(key: string, value: T, options: SetOptions<string, T>): T {
     const cacheValue = this.rfdcClone(value);
     super.set(key, cacheValue, options);
     return cacheValue;
