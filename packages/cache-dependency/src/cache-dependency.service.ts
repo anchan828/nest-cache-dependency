@@ -186,12 +186,13 @@ export class CacheDependencyService {
 
     if (keyPattern !== undefined && this.isMemoryStore()) {
       keys = await this.cacheManager.keys();
-      keys = keys.filter((key) => key.startsWith(keyPattern?.replace(/\*$/, "") as string));
+      keys = keys.filter((k) => k).filter((key) => key.startsWith(keyPattern?.replace(/\*$/, "") as string));
     } else {
       keys = await this.cacheManager.keys(keyPattern);
     }
 
     return keys
+      .filter((k) => k)
       .sort()
       .map((k) =>
         this.options.cacheDependencyVersion
