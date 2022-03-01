@@ -67,6 +67,10 @@ export class RedisStore implements CacheManager {
 
   @CallbackDecorator()
   public async get<T>(key: string): Promise<T | undefined> {
+    if (typeof key !== "string") {
+      return;
+    }
+
     let result: T | null | undefined;
     if (this.enableMemoryCache(this.memoryCache, key)) {
       result = this.memoryCache.get(key);
@@ -132,6 +136,10 @@ export class RedisStore implements CacheManager {
     const map = new Map<string, T | undefined>(keys.map((key) => [key, undefined]));
 
     for (const key of keys) {
+      if (typeof key !== "string") {
+        continue;
+      }
+
       if (this.enableMemoryCache(this.memoryCache, key)) {
         const result = this.memoryCache.get<T>(key);
         map.set(key, result);

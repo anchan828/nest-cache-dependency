@@ -172,7 +172,20 @@ export class CacheDependencyService {
    * @memberof CacheDependencyService
    */
   public async getKeys(pattern?: string): Promise<string[]> {
-    return (await this.cacheManager.keys(pattern))
+    let keys: string[] = [];
+    let keyPattern = pattern;
+    if (keyPattern && this.options.cacheDependencyVersion) {
+      keyPattern = `${this.options.cacheDependencyVersion}:${pattern}`;
+    }
+
+    if (keyPattern !== undefined && this.cacheManager?.store.name === "memory") {
+      keys = await this.cacheManager.keys();
+      keys = keys.filter((key) => key.startsWith(keyPattern?.replace(/\*$/, "") as string));
+    } else {
+      keys = await this.cacheManager.keys(keyPattern);
+    }
+
+    return keys
       .sort()
       .map((k) =>
         this.options.cacheDependencyVersion
