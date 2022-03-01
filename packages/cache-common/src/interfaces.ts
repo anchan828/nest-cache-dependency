@@ -2,6 +2,7 @@ import { CacheStore } from "@nestjs/common";
 
 export interface CacheManagerSetOptions {
   ttl?: number;
+  inMmeoryTTL?: number;
 }
 
 export type CacheManager = CacheStore & {

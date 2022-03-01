@@ -59,7 +59,9 @@ export class RedisStore implements CacheManager {
       await this.redisCache.set(key, json);
     }
 
-    if (this.enableMemoryCache(this.memoryCache, key) && ttl !== 0) {
+    const inMemoryTTL = options?.inMmeoryTTL || ttl;
+
+    if (this.enableMemoryCache(this.memoryCache, key) && inMemoryTTL !== 0) {
       const cachedValue = this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
       await this.args.inMemory?.setCache?.(key, cachedValue, ttl);
     }

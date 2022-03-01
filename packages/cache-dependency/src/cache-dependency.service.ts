@@ -127,7 +127,11 @@ export class CacheDependencyService {
    * @returns {Promise<void>}
    * @memberof CacheDependencyService
    */
-  public async set(key: string, value: unknown, ttl?: number): Promise<void> {
+  public async set(key: string, value: unknown, ttl?: number): Promise<void>;
+
+  public async set(key: string, value: unknown, options?: CacheManagerSetOptions): Promise<void>;
+
+  public async set(key: string, value: unknown, ttlOrOptions?: number | CacheManagerSetOptions): Promise<void> {
     if (isNullOrUndefined(value)) {
       this.logger.debug(`cache manager doesn't store 'value' because 'value' is undefined.`);
       return;
@@ -138,11 +142,8 @@ export class CacheDependencyService {
       return;
     }
 
-    const options: CacheManagerSetOptions = {};
-
-    if (ttl) {
-      options.ttl = ttl;
-    }
+    const options: CacheManagerSetOptions =
+      typeof ttlOrOptions === "number" ? { ttl: ttlOrOptions } : ttlOrOptions || {};
 
     await this.cacheManager.set(this.toKey(key), value, options);
   }
