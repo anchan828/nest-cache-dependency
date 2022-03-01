@@ -1,4 +1,9 @@
-import { CacheManager, CacheManagerSetOptions, isNullOrUndefined } from "@anchan828/nest-cache-common";
+import {
+  CacheManager,
+  CacheManagerGetOptions,
+  CacheManagerSetOptions,
+  isNullOrUndefined,
+} from "@anchan828/nest-cache-common";
 import { CACHE_MANAGER, Inject, Injectable, Logger } from "@nestjs/common";
 import { DepGraph } from "dependency-graph";
 import { CacheDependencyEventEmitter } from "./cache-dependency.emitter";
@@ -71,8 +76,8 @@ export class CacheDependencyService {
    * @returns {Promise<T>}
    * @memberof CacheDependencyService
    */
-  public async get<T>(key: string): Promise<T | undefined> {
-    return this.cacheManager.get<T>(this.toKey(key));
+  public async get<T>(key: string, options?: CacheManagerGetOptions): Promise<T | undefined> {
+    return this.cacheManager.get<T>(this.toKey(key), options);
   }
 
   /**
@@ -82,13 +87,17 @@ export class CacheDependencyService {
    * @return {*}  {(Promise<(T | undefined)[]>)}
    * @memberof CacheDependencyService
    */
-  public async mget<T>(keys: string[]): Promise<Record<string, T | undefined>> {
+  public async mget<T>(keys: string[], options?: CacheManagerGetOptions): Promise<Record<string, T | undefined>> {
     if (keys.length === 0) {
       return {};
     }
 
     const result: Record<string, T | undefined> = {};
-    const caches = await this.cacheManager.mget<T>(...keys.map((k) => this.toKey(k)));
+
+    const caches = this.isMemoryStore()
+      ? await this.cacheManager.mget<T>(...keys.map((k) => this.toKey(k)))
+      : await this.cacheManager.mget<T>(...keys.map((k) => this.toKey(k)), options);
+
     for (let i = 0; i < keys.length; i++) {
       result[keys[i]] = caches[i];
     }
@@ -103,7 +112,7 @@ export class CacheDependencyService {
    * @return {*}  {Promise<void>}
    * @memberof CacheDependencyService
    */
-  public async mset<T>(values: Record<string, T | undefined>): Promise<void> {
+  public async mset<T>(values: Record<string, T | undefined>, options?: CacheManagerSetOptions): Promise<void> {
     const keyOrValues: (string | T)[] = [];
 
     for (const [key, value] of Object.entries(values)) {
@@ -116,7 +125,7 @@ export class CacheDependencyService {
       return;
     }
 
-    await this.cacheManager.mset<T>(...keyOrValues);
+    await this.cacheManager.mset<T>(...keyOrValues, options);
   }
 
   /**
@@ -175,7 +184,7 @@ export class CacheDependencyService {
       keyPattern = `${this.options.cacheDependencyVersion}:${pattern}`;
     }
 
-    if (keyPattern !== undefined && this.cacheManager?.store.name === "memory") {
+    if (keyPattern !== undefined && this.isMemoryStore()) {
       keys = await this.cacheManager.keys();
       keys = keys.filter((key) => key.startsWith(keyPattern?.replace(/\*$/, "") as string));
     } else {
@@ -244,7 +253,9 @@ export class CacheDependencyService {
       dependenciesCacheKeys[dependenciesCacheKey] = dependencies;
     }
 
-    const dependenciesCacheKeyValues = await this.mget<string[]>(Object.keys(dependenciesCacheKeys));
+    const dependenciesCacheKeyValues = await this.mget<string[]>(Object.keys(dependenciesCacheKeys), {
+      inMmeoryTTL: 0,
+    });
 
     for (const entry of Object.entries(dependenciesCacheKeyValues)) {
       if (!Array.isArray(entry[1])) {
@@ -257,13 +268,14 @@ export class CacheDependencyService {
         }
       }
     }
+
     if (values.length !== 0) {
       await this.cacheManager.mset<any>(...this.toKeyOrValues(values));
     }
 
     if (ttlValues.length !== 0) {
       await this.cacheManager.mset<any>(...this.toKeyOrValues(ttlValues), {
-        options: { ttl: -1 },
+        ttl: this.isMemoryStore() ? Number.MAX_SAFE_INTEGER : -1,
       });
     }
   }
@@ -279,7 +291,7 @@ export class CacheDependencyService {
     const dependencyKeys: string[] = [];
     const dependenciesCacheKey = createDependenciesCacheKey(key);
 
-    const values = (await this.get<string[]>(dependenciesCacheKey)) as string[];
+    const values = (await this.get<string[]>(dependenciesCacheKey, { inMmeoryTTL: 0 })) as string[];
     if (Array.isArray(values)) {
       for (const value of values) {
         dependencyKeys.push(...(await this.getCacheDependencyKeys(value)));
@@ -342,5 +354,9 @@ export class CacheDependencyService {
       }
       return i % 2 ? kv : `${this.options.cacheDependencyVersion}:${kv}`;
     });
+  }
+
+  private isMemoryStore(): boolean {
+    return this.cacheManager?.store.name === "memory";
   }
 }

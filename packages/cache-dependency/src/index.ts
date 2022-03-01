@@ -1,4 +1,8 @@
-export { CacheManagerSetOptions, CACHE_DEPENDENCY_PREFIX_CACHE_KEY } from "@anchan828/nest-cache-common";
+export {
+  CacheManagerGetOptions,
+  CacheManagerSetOptions,
+  CACHE_DEPENDENCY_PREFIX_CACHE_KEY,
+} from "@anchan828/nest-cache-common";
 export { CacheDependency } from "./cache-dependency.decorator";
 export { CacheDependencyInterceptor } from "./cache-dependency.interceptor";
 export {

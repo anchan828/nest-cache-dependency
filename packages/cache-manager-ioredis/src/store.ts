@@ -1,6 +1,7 @@
 /* eslint-disable prefer-rest-params */
 import {
   CacheManager,
+  CacheManagerGetOptions,
   CacheManagerSetOptions,
   CACHE_DEPENDENCY_PREFIX_CACHE_KEY,
   isNullOrUndefined,
@@ -24,9 +25,9 @@ export class RedisStore implements CacheManager {
   constructor(private readonly args: RedisStoreArgs) {
     if (args.enabledInMemory || args.inMemory?.enabled) {
       this.memoryCache = new InMemoryCacheService({
-        max: args.inMemory?.max || Math.pow(2, 16),
-        maxSize: args.inMemory?.max || Math.pow(2, 16),
-        ttl: (args.inMemoryTTL || args.inMemory?.ttl || 5) * 1000,
+        max: args.inMemory?.max ?? Math.pow(2, 16),
+        maxSize: args.inMemory?.max ?? Math.pow(2, 16),
+        ttl: (args.inMemoryTTL ?? args.inMemory?.ttl ?? 5) * 1000,
       });
 
       this.memoryCacheIntervalId = setInterval(
@@ -59,7 +60,7 @@ export class RedisStore implements CacheManager {
       await this.redisCache.set(key, json);
     }
 
-    const inMemoryTTL = options?.inMmeoryTTL || ttl;
+    const inMemoryTTL = options?.inMmeoryTTL ?? ttl;
 
     if (this.enableMemoryCache(this.memoryCache, key) && inMemoryTTL !== 0) {
       const cachedValue = this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
@@ -68,7 +69,7 @@ export class RedisStore implements CacheManager {
   }
 
   @CallbackDecorator()
-  public async get<T>(key: string): Promise<T | undefined> {
+  public async get<T>(key: string, options?: CacheManagerGetOptions): Promise<T | undefined> {
     if (typeof key !== "string") {
       return;
     }
@@ -93,7 +94,7 @@ export class RedisStore implements CacheManager {
 
     if (this.enableMemoryCache(this.memoryCache, key)) {
       const ttl = await this.redisCache.ttl(key);
-      if (ttl !== 0) {
+      if (ttl !== 0 && options?.inMmeoryTTL !== 0) {
         const cachedValue = this.memoryCache.set(key, result, { ttl: this.getImMemoryTTL(ttl) });
         await this.args.inMemory?.setCache?.(key, cachedValue, ttl);
       }
@@ -136,7 +137,14 @@ export class RedisStore implements CacheManager {
   }
 
   @CallbackDecorator()
-  public async mget<T>(...keys: string[]): Promise<Array<T | undefined>> {
+  public async mget<T>(
+    ...keysOrOptions: string[] | [...string[], CacheManagerGetOptions | undefined]
+  ): Promise<Array<T | undefined>> {
+    const keys = keysOrOptions.filter((x): x is string => typeof x === "string") as string[];
+    const options = keysOrOptions.find((x): x is CacheManagerGetOptions => typeof x === "object") as
+      | CacheManagerGetOptions
+      | undefined;
+
     const map = new Map<string, T | undefined>(keys.map((key) => [key, undefined]));
 
     for (const key of keys) {
@@ -164,7 +172,7 @@ export class RedisStore implements CacheManager {
 
           if (this.enableMemoryCache(this.memoryCache, key)) {
             const ttl = await this.redisCache.ttl(key);
-            if (ttl !== 0) {
+            if (ttl !== 0 && options?.inMmeoryTTL !== 0) {
               const cachedValue = this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
               await this.args.inMemory?.setCache?.(key, cachedValue, ttl);
             }
@@ -203,7 +211,9 @@ export class RedisStore implements CacheManager {
           ttl = this.args.ttl;
         }
 
-        if (this.enableMemoryCache(this.memoryCache, key)) {
+        const inMemoryTTL = options?.inMmeoryTTL ?? ttl;
+
+        if (this.enableMemoryCache(this.memoryCache, key) && inMemoryTTL !== 0) {
           const cachedValue = this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
           await this.args.inMemory?.setCache?.(key, cachedValue, ttl);
         }
