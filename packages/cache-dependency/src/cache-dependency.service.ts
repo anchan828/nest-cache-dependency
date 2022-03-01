@@ -303,6 +303,7 @@ export class CacheDependencyService {
     }
 
     await this.cacheManager.del(...keys.map((k) => this.toKey(k)));
+    this.logger.debug(`Deleted: ${keys.map((k) => this.toKey(k)).join(", ")}`);
   }
 
   /**
