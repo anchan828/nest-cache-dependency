@@ -110,14 +110,16 @@ export class RedisStore implements CacheManager {
 
   @CallbackDecorator()
   public async keys(pattern?: string): Promise<string[]> {
+    const results: string[] = [];
     if (!pattern) {
       pattern = "*";
     }
-    const keys = await this.redisCache.keys(pattern);
-    if (!Array.isArray(keys)) {
-      return [];
+
+    for await (const keys of this.redisCache.scanStream({ match: pattern, count: 100 })) {
+      results.push(...keys);
     }
-    return keys.sort();
+
+    return results.sort();
   }
 
   @DelCallbackDecorator()
