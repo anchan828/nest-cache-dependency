@@ -75,7 +75,7 @@ export class RedisStore implements CacheManager {
     }
 
     let result: T | null | undefined;
-    if (this.enableMemoryCache(this.memoryCache, key)) {
+    if (this.enableMemoryCache(this.memoryCache, key) && options?.inMmeoryTTL !== 0) {
       result = this.memoryCache.get(key);
     }
 
@@ -152,7 +152,7 @@ export class RedisStore implements CacheManager {
         continue;
       }
 
-      if (this.enableMemoryCache(this.memoryCache, key)) {
+      if (this.enableMemoryCache(this.memoryCache, key) && options?.inMmeoryTTL !== 0) {
         const result = this.memoryCache.get<T>(key);
         map.set(key, result);
         await this.args.inMemory?.hitCache?.(key);
@@ -170,9 +170,9 @@ export class RedisStore implements CacheManager {
           const value = parseJSON<T>(results[index]);
           map.set(key, value);
 
-          if (this.enableMemoryCache(this.memoryCache, key)) {
+          if (this.enableMemoryCache(this.memoryCache, key) && options?.inMmeoryTTL !== 0) {
             const ttl = await this.redisCache.ttl(key);
-            if (ttl !== 0 && options?.inMmeoryTTL !== 0) {
+            if (ttl !== 0) {
               const cachedValue = this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
               await this.args.inMemory?.setCache?.(key, cachedValue, ttl);
             }
