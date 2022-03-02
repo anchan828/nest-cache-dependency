@@ -2,10 +2,25 @@ import { CacheStore } from "@nestjs/common";
 
 export interface CacheManagerSetOptions {
   ttl?: number;
+
+  /**
+   * @anchan828/nest-cache-manager-ioredis
+   * This package will cache to in-memory if the cache is in Redis but not in in-memory.
+   *
+   * @type {number}
+   * @memberof CacheManagerSetOptions
+   */
   inMmeoryTTL?: number;
 }
 
 export interface CacheManagerGetOptions {
+  /**
+   * @anchan828/nest-cache-manager-ioredis
+   * This package will cache to in-memory if the cache is in Redis but not in in-memory.
+   *
+   * @type {number}
+   * @memberof CacheManagerGetOptions
+   */
   inMmeoryTTL?: number;
 }
 
