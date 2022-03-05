@@ -42,7 +42,7 @@
     "@types/lru-cache": "7.4.0",
     "@types/route-parser": "0.1.4",
     "ioredis": "4.28.5",
-    "lru-cache": "7.4.0",
+    "lru-cache": "7.4.1",
     "rxjs": "7.5.4"
   },
   "peerDependencies": {
