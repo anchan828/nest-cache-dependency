@@ -160,8 +160,10 @@ export class RedisStore implements CacheManager {
         const existsKey = await this.redisCache.exists(key);
         if (existsKey) {
           const result = this.memoryCache.get<T>(key);
-          map.set(key, result);
-          await this.args.inMemory?.hitCache?.(key);
+          if (!isNullOrUndefined(result)) {
+            map.set(key, result);
+            await this.args.inMemory?.hitCache?.(key);
+          }
         }
       }
     }
