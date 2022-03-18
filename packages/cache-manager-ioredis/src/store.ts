@@ -53,11 +53,18 @@ export class RedisStore implements CacheManager {
     }
 
     const json = JSON.stringify(value);
+    const pipeline = this.redisCache.pipeline();
 
     if (ttl !== undefined && ttl !== null && ttl !== -1) {
-      await this.redisCache.setex(key, ttl, json);
+      pipeline.setex(key, ttl, json);
     } else {
-      await this.redisCache.set(key, json);
+      pipeline.set(key, json);
+    }
+
+    const hasError = this.hasErrorPipeline(await pipeline.exec());
+
+    if (hasError) {
+      return;
     }
 
     const inMemoryTTL = options?.inMmeoryTTL ?? ttl;
@@ -110,7 +117,11 @@ export class RedisStore implements CacheManager {
   @DelCallbackDecorator()
   public async del(...keys: string[]): Promise<void> {
     if (this.memoryCache) {
-      keys.forEach((key) => this.memoryCache?.delete(key));
+      for (const key of keys) {
+        if (this.memoryCache?.delete(key)) {
+          await this.args.inMemory?.deleteCache?.(key);
+        }
+      }
     }
     await this.redisCache.del(...keys);
   }
@@ -271,6 +282,15 @@ export class RedisStore implements CacheManager {
 
     const ttl = Math.max(0, redisTTL || 0);
     return Math.min(ttl, this.args.inMemoryTTL || this.args.inMemory?.ttl || 5) * 1000;
+  }
+
+  private hasErrorPipeline(results: Array<[Error | null, any]>): boolean {
+    for (const result of results) {
+      if (result[0] !== null) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 

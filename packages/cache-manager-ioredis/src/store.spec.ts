@@ -7,6 +7,8 @@ import { RedisStoreArgs } from "./store.interface";
 describe("RedisStore", () => {
   let store: CacheManager;
   let redis: RedisStore;
+  let store2: CacheManager;
+  let redis2: RedisStore;
   beforeEach(async () => {
     store = caching({
       store: redisStore,
@@ -14,15 +16,48 @@ describe("RedisStore", () => {
       ttl: 5,
     } as any) as any as CacheManager;
     redis = (store as any).store;
+
+    store2 = caching({
+      store: redisStore,
+      host: process.env.REDIS_HOST || "localhost",
+      ttl: 5,
+    } as any) as any as CacheManager;
+
+    redis2 = store2.store;
   });
 
   afterEach(async () => {
     await redis["redisCache"].flushdb();
     await redis.close();
+
+    await redis2["redisCache"].flushdb();
+    await redis2.close();
   });
 
   it("create cache instance", () => {
     expect(store).toBeDefined();
+  });
+
+  it("should set cache - watch", async () => {
+    const key = "test";
+    await redis["redisCache"].watch(key);
+    await store2.set(key, { id: 2 });
+
+    await store.set(key, {
+      id: 1,
+      name: "Name",
+      nest: {
+        id: 10,
+      },
+    });
+
+    await expect(store.get(key)).resolves.toEqual({
+      id: 1,
+      name: "Name",
+      nest: {
+        id: 10,
+      },
+    });
   });
 
   it("should set cache", async () => {
@@ -262,4 +297,19 @@ describe("In-memory cache", () => {
     // Redundant checks are performed since the actual measured values vary depending on the machine specs.
     expect(setCacheFn.mock.calls[1][2] < 5).toBeTruthy();
   });
+
+  it(
+    "should create and clear caches many times in a short period of time",
+    async () => {
+      const key = "key";
+      const value = "value";
+      for (let i = 0; i < 1000; i++) {
+        await store.set(key, value);
+        await expect(store.get(key)).resolves.toEqual(value);
+        await store.reset();
+        await expect(store.get(key)).resolves.toBeUndefined();
+      }
+    },
+    1000 * 60,
+  );
 });

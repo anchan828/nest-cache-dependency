@@ -40,6 +40,10 @@ export interface RedisStoreArgs extends RedisOptions {
      * Called when a cache is saved to the in-memory.
      */
     setCache?: (key: string, value: any, ttl?: number) => void | Promise<void>;
+    /**
+     * Called when a cache is deleted to the in-memory.
+     */
+    deleteCache?: (key: string) => void | Promise<void>;
   };
 }
 
