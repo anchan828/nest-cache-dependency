@@ -41,10 +41,24 @@ export interface RedisStoreArgs extends RedisOptions {
      */
     setCache?: (key: string, value: any, ttl?: number) => void | Promise<void>;
     /**
-     * Called when a cache is deleted to the in-memory.
+     * Called when a cache is deleted from the in-memory.
      */
     deleteCache?: (key: string) => void | Promise<void>;
   };
+
+  /**
+   * Called when the redis cache is hit.
+   */
+  hitCache?: (key: string) => void | Promise<void>;
+
+  /**
+   * Called when a cache is saved to redis.
+   */
+  setCache?: (key: string, value: any, ttl?: number) => void | Promise<void>;
+  /**
+   * Called when a cache is deleted from redis.
+   */
+  deleteCache?: (key: string) => void | Promise<void>;
 }
 
 export type CallbackFunction = (err?: Error | null, result?: any | null) => void;

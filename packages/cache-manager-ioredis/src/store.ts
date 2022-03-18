@@ -68,6 +68,8 @@ export class RedisStore implements CacheManager {
       return;
     }
 
+    await this.args.setCache?.(key, json, ttl);
+
     const inMemoryTTL = options?.inMmeoryTTL ?? ttl;
 
     if (this.enableMemoryCache(this.memoryCache, key) && inMemoryTTL !== 0) {
@@ -111,7 +113,7 @@ export class RedisStore implements CacheManager {
         await this.args.inMemory?.setCache?.(key, cachedValue, ttl);
       }
     }
-
+    await this.args.hitCache?.(key);
     return result;
   }
 
@@ -125,6 +127,9 @@ export class RedisStore implements CacheManager {
       }
     }
     await this.redisCache.del(...keys);
+    for (const key of keys) {
+      await this.args.deleteCache?.(key);
+    }
   }
 
   @CallbackDecorator()
@@ -191,6 +196,8 @@ export class RedisStore implements CacheManager {
           const value = parseJSON<T>(results[index]);
           map.set(key, value);
 
+          await this.args.hitCache?.(key);
+
           if (this.enableMemoryCache(this.memoryCache, key) && options?.inMmeoryTTL !== 0) {
             const ttl = await this.redisCache.ttl(key);
             if (ttl !== 0) {
@@ -211,8 +218,9 @@ export class RedisStore implements CacheManager {
     if (keyOrValues.length % 2 > 0 && this.isObject(keyOrValues[keyOrValues.length - 1])) {
       options = keyOrValues[keyOrValues.length - 1] as CacheManagerSetOptions;
     }
-    const pipeline = this.redisCache.pipeline();
+
     for (let i = 0; i < keyOrValues.length; i += 2) {
+      const pipeline = this.redisCache.pipeline();
       if (keyOrValues.length !== i + 1) {
         const key = keyOrValues[i] as string;
         const value = keyOrValues[i + 1];
@@ -232,13 +240,6 @@ export class RedisStore implements CacheManager {
           ttl = this.args.ttl;
         }
 
-        const inMemoryTTL = options?.inMmeoryTTL ?? ttl;
-
-        if (this.enableMemoryCache(this.memoryCache, key) && inMemoryTTL !== 0) {
-          const cachedValue = this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
-          await this.args.inMemory?.setCache?.(key, cachedValue, ttl);
-        }
-
         const json = JSON.stringify(value);
 
         if (ttl !== undefined && ttl !== null && ttl !== -1) {
@@ -246,9 +247,23 @@ export class RedisStore implements CacheManager {
         } else {
           pipeline.set(key, json);
         }
+
+        const hasError = this.hasErrorPipeline(await pipeline.exec());
+
+        if (hasError) {
+          continue;
+        }
+
+        await this.args.setCache?.(key, json, ttl);
+
+        const inMemoryTTL = options?.inMmeoryTTL ?? ttl;
+
+        if (this.enableMemoryCache(this.memoryCache, key) && inMemoryTTL !== 0) {
+          const cachedValue = this.memoryCache.set(key, value, { ttl: this.getImMemoryTTL(ttl) });
+          await this.args.inMemory?.setCache?.(key, cachedValue, ttl);
+        }
       }
     }
-    await pipeline.exec();
   }
 
   public async close(): Promise<void> {
