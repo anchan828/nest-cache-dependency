@@ -39,10 +39,10 @@
     "@nestjs/config": "2.0.0",
     "@types/cache-manager": "3.4.3",
     "@types/ioredis": "4.28.8",
-    "@types/lru-cache": "7.4.0",
+    "@types/lru-cache": "7.5.0",
     "@types/route-parser": "0.1.4",
     "ioredis": "4.28.5",
-    "lru-cache": "7.5.1",
+    "lru-cache": "7.7.0",
     "rxjs": "7.5.5"
   },
   "peerDependencies": {

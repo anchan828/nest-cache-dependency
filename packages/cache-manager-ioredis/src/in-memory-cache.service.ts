@@ -4,7 +4,7 @@ import * as rfdc from "rfdc";
 export class InMemoryCacheService extends LRUCache<string, any> {
   private readonly rfdcClone = rfdc();
 
-  constructor(readonly options?: LRUCache.Options<string, any>) {
+  constructor(readonly options: LRUCache.Options<string, any>) {
     super(options);
   }
 

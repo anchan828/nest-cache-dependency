@@ -28,6 +28,7 @@ export class RedisStore implements CacheManager {
         max: args.inMemory?.max ?? Math.pow(2, 16),
         maxSize: args.inMemory?.max ?? Math.pow(2, 16),
         ttl: (args.inMemoryTTL ?? args.inMemory?.ttl ?? 5) * 1000,
+        sizeCalculation: () => 1,
       });
 
       this.memoryCacheIntervalId = setInterval(
