@@ -54,18 +54,11 @@ export class RedisStore implements CacheManager {
     }
 
     const json = JSON.stringify(value);
-    const pipeline = this.redisCache.pipeline();
 
     if (ttl !== undefined && ttl !== null && ttl !== -1) {
-      pipeline.setex(key, ttl, json);
+      this.redisCache.setex(key, ttl, json);
     } else {
-      pipeline.set(key, json);
-    }
-
-    const hasError = this.hasErrorPipeline(await pipeline.exec());
-
-    if (hasError) {
-      return;
+      this.redisCache.set(key, json);
     }
 
     await this.args.setCache?.(key, json, ttl);
@@ -220,7 +213,6 @@ export class RedisStore implements CacheManager {
     }
 
     for (let i = 0; i < keyOrValues.length; i += 2) {
-      const pipeline = this.redisCache.pipeline();
       if (keyOrValues.length !== i + 1) {
         const key = keyOrValues[i] as string;
         const value = keyOrValues[i + 1];
@@ -239,19 +231,13 @@ export class RedisStore implements CacheManager {
         } else if (this.args.ttl) {
           ttl = this.args.ttl;
         }
-
+        console.time("JSON.stringify");
         const json = JSON.stringify(value);
-
+        console.timeEnd("JSON.stringify");
         if (ttl !== undefined && ttl !== null && ttl !== -1) {
-          pipeline.setex(key, ttl, json);
+          this.redisCache.setex(key, ttl, json);
         } else {
-          pipeline.set(key, json);
-        }
-
-        const hasError = this.hasErrorPipeline(await pipeline.exec());
-
-        if (hasError) {
-          continue;
+          this.redisCache.set(key, json);
         }
 
         await this.args.setCache?.(key, json, ttl);
@@ -298,15 +284,6 @@ export class RedisStore implements CacheManager {
 
     const ttl = Math.max(0, redisTTL || 0);
     return Math.min(ttl, this.args.inMemoryTTL || this.args.inMemory?.ttl || 5) * 1000;
-  }
-
-  private hasErrorPipeline(results: Array<[Error | null, any]>): boolean {
-    for (const result of results) {
-      if (result[0] !== null) {
-        return true;
-      }
-    }
-    return false;
   }
 }
 
