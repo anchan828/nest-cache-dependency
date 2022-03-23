@@ -12,10 +12,10 @@ export const parseJSON = <T>(json?: string): T | undefined => {
 
   try {
     return JSON.parse(json, (_: string, value: any): any => {
-      if (typeof value === "string" && dateRegExp.test(value)) {
-        const date = Date.parse(value);
-        if (!isNaN(date)) {
-          return new Date(date);
+      if (typeof value === "string" && value.length === 24 && dateRegExp.test(value)) {
+        const date = new Date(value);
+        if (+date === +date) {
+          return date;
         }
       }
       return value;
