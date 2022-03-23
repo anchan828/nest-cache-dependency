@@ -1,9 +1,6 @@
 import * as LRUCache from "lru-cache";
 import { SetOptions } from "lru-cache";
-import * as rfdc from "rfdc";
 export class InMemoryCacheService extends LRUCache<string, any> {
-  private readonly rfdcClone = rfdc();
-
   constructor(readonly options: LRUCache.Options<string, any>) {
     super(options);
   }
@@ -19,7 +16,7 @@ export class InMemoryCacheService extends LRUCache<string, any> {
    * @memberof InMemoryCacheService
    */
   public set<T>(key: string, value: T, options: SetOptions<string, T>): T {
-    const cacheValue = this.rfdcClone(value);
+    const cacheValue = this.copy(value);
     super.set(key, cacheValue, options);
     return cacheValue;
   }
@@ -27,13 +24,25 @@ export class InMemoryCacheService extends LRUCache<string, any> {
   /**
    * Get value from key.
    * Note: value is cloned value.
-   * @template V
+   * @template T
    * @param {string} key
    * @return {*}  {(V | undefined)}
    * @memberof InMemoryCacheService
    */
-  public get<V>(key: string): V | undefined {
+  public get<T>(key: string): T | undefined {
     const cacheValue = super.get(key);
-    return this.rfdcClone(cacheValue);
+    return this.copy(cacheValue);
+  }
+
+  private copy<T>(value: T): T {
+    if (Array.isArray(value)) {
+      return value.map(this.copy) as unknown as T;
+    }
+
+    if (typeof value === "object") {
+      return { ...value };
+    }
+
+    return value;
   }
 }
