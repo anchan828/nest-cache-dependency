@@ -231,9 +231,8 @@ export class RedisStore implements CacheManager {
         } else if (this.args.ttl) {
           ttl = this.args.ttl;
         }
-        console.time("JSON.stringify");
         const json = JSON.stringify(value);
-        console.timeEnd("JSON.stringify");
+
         if (ttl !== undefined && ttl !== null && ttl !== -1) {
           this.redisCache.setex(key, ttl, json);
         } else {
