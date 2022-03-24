@@ -47,9 +47,9 @@ export class RedisStore implements CacheManager {
 
     let ttl: number | undefined;
 
-    if (options && options.ttl) {
+    if (options && !isNullOrUndefined(options.ttl)) {
       ttl = options.ttl;
-    } else if (this.args.ttl) {
+    } else if (!isNullOrUndefined(this.args.ttl)) {
       ttl = this.args.ttl;
     }
 
@@ -230,9 +230,9 @@ export class RedisStore implements CacheManager {
 
         let ttl: number | undefined;
 
-        if (options && options.ttl) {
+        if (options && !isNullOrUndefined(options.ttl)) {
           ttl = options.ttl;
-        } else if (this.args.ttl) {
+        } else if (!isNullOrUndefined(this.args.ttl)) {
           ttl = this.args.ttl;
         }
 
