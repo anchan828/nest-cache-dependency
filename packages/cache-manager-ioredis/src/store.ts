@@ -53,6 +53,10 @@ export class RedisStore implements CacheManager {
       ttl = this.args.ttl;
     }
 
+    if (ttl === 0) {
+      return;
+    }
+
     const json = JSON.stringify(value);
 
     if (ttl !== undefined && ttl !== null && ttl !== -1) {
@@ -231,6 +235,11 @@ export class RedisStore implements CacheManager {
         } else if (this.args.ttl) {
           ttl = this.args.ttl;
         }
+
+        if (ttl === 0) {
+          continue;
+        }
+
         const json = JSON.stringify(value);
 
         if (ttl !== undefined && ttl !== null && ttl !== -1) {
