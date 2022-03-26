@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import * as Redis from "ioredis";
+import Redis, { RedisOptions } from "ioredis";
 import { CacheDependencyEventEmitter } from "./cache-dependency.emitter";
 import { CacheDependencyPubSubMessage } from "./cache-dependency.interface";
 import { CACHE_DEPENDENCY_MODULE, CACHE_DEPENDENCY_PUBSUB_DELETE_CHANNEL_EVENT } from "./constants";
@@ -13,15 +13,15 @@ import { CACHE_DEPENDENCY_MODULE, CACHE_DEPENDENCY_PUBSUB_DELETE_CHANNEL_EVENT }
 export class CacheDependencyPubSubService {
   private readonly logger = new Logger(CACHE_DEPENDENCY_MODULE);
 
-  private publisher!: Redis.Redis;
+  private publisher!: Redis;
 
-  private subscriber!: Redis.Redis;
+  private subscriber!: Redis;
 
   private instanceId: string = Date.now().toString();
 
   constructor(private readonly emitter: CacheDependencyEventEmitter) {}
 
-  public async init(pubsubOptions: Redis.RedisOptions): Promise<this> {
+  public async init(pubsubOptions: RedisOptions): Promise<this> {
     this.publisher = new Redis(pubsubOptions);
     this.subscriber = new Redis(pubsubOptions);
 

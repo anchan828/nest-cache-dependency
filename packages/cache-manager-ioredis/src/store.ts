@@ -8,13 +8,13 @@ import {
   parseJSON,
 } from "@anchan828/nest-cache-common";
 import { CacheStore, CacheStoreFactory, LiteralObject } from "@nestjs/common";
-import * as Redis from "ioredis";
+import Redis from "ioredis";
 import { CACHE_STORE_NAME } from "./constants";
 import { InMemoryCacheService } from "./in-memory-cache.service";
 import { CallbackDecorator, DelCallbackDecorator } from "./store.decorator";
 import { RedisStoreArgs } from "./store.interface";
 export class RedisStore implements CacheManager {
-  private readonly redisCache: Redis.Redis;
+  private readonly redisCache: Redis;
 
   public readonly name: string = CACHE_STORE_NAME;
 

@@ -1,6 +1,6 @@
 import { CacheManager } from "@anchan828/nest-cache-common";
 import { caching, StoreConfig } from "cache-manager";
-import * as Redis from "ioredis";
+import Redis from "ioredis";
 import { setTimeout } from "timers/promises";
 import { RedisStore, redisStore } from "./store";
 import { RedisStoreArgs } from "./store.interface";
@@ -153,7 +153,7 @@ describe("RedisStore", () => {
     const results = await store.keys();
     expect(results.sort()).toEqual(["changed:key"]);
 
-    const redis = (store as any).store.redisCache as Redis.Redis;
+    const redis = (store as any).store.redisCache as Redis;
     await redis.quit();
   });
 
