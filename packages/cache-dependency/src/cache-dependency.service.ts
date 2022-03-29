@@ -2,6 +2,7 @@ import {
   CacheManager,
   CacheManagerGetOptions,
   CacheManagerSetOptions,
+  chunk,
   isNullOrUndefined,
 } from "@anchan828/nest-cache-common";
 import { CACHE_MANAGER, Inject, Injectable, Logger } from "@nestjs/common";
@@ -125,7 +126,9 @@ export class CacheDependencyService {
       return;
     }
 
-    await this.cacheManager.mset<T>(...keyOrValues, options);
+    for (const items of chunk(keyOrValues, 2000)) {
+      await this.cacheManager.mset<T>(...items, options);
+    }
   }
 
   /**
@@ -166,7 +169,8 @@ export class CacheDependencyService {
 
     keys = Array.from(new Set(keys));
 
-    await this.cacheManager.del(...keys.map((k) => this.toKey(k)));
+    await this.cacheManager.del(...keys);
+
     this.emitter.emit("deleted", keys);
   }
 
@@ -275,13 +279,17 @@ export class CacheDependencyService {
     }
 
     if (values.length !== 0) {
-      await this.cacheManager.mset<any>(...this.toKeyOrValues(values));
+      for (const items of chunk(this.toKeyOrValues(values), 2000)) {
+        await this.cacheManager.mset<any>(...items);
+      }
     }
 
     if (ttlValues.length !== 0) {
-      await this.cacheManager.mset<any>(...this.toKeyOrValues(ttlValues), {
-        ttl: this.isMemoryStore() ? Number.MAX_SAFE_INTEGER : -1,
-      });
+      for (const items of chunk(this.toKeyOrValues(ttlValues), 2000)) {
+        await this.cacheManager.mset<any>(...items, {
+          ttl: this.isMemoryStore() ? Number.MAX_SAFE_INTEGER : -1,
+        });
+      }
     }
   }
 
@@ -318,7 +326,10 @@ export class CacheDependencyService {
    */
   public async clearCacheDependencies(...keys: string[]): Promise<void> {
     const cacheKeys = await Promise.all(keys.map((key) => this.getCacheDependencyKeys(key)));
-    await this.delete(...cacheKeys.flat());
+
+    for (const keys of chunk(cacheKeys.flat(), 2000)) {
+      await this.delete(...keys);
+    }
   }
 
   /**
