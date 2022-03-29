@@ -4,6 +4,7 @@ import {
   CacheManagerGetOptions,
   CacheManagerSetOptions,
   CACHE_DEPENDENCY_PREFIX_CACHE_KEY,
+  chunk,
   isNullOrUndefined,
   parseJSON,
 } from "@anchan828/nest-cache-common";
@@ -127,9 +128,12 @@ export class RedisStore implements CacheManager {
         }
       }
     }
-    await this.redisCache.del(...keys);
-    for (const key of keys) {
-      await this.args.deleteCache?.(key);
+
+    for (const deleteKeys of chunk(keys, 2000)) {
+      await this.redisCache.del(...deleteKeys);
+      for (const key of deleteKeys) {
+        await this.args.deleteCache?.(key);
+      }
     }
   }
 
@@ -189,7 +193,11 @@ export class RedisStore implements CacheManager {
     const notFoundKeys = [...map.keys()].filter((key) => map.get(key) === undefined);
 
     if (notFoundKeys.length !== 0) {
-      const results = (await this.redisCache.mget(...notFoundKeys)) as Array<string | undefined>;
+      const results: Array<string | undefined> = [];
+
+      for (const keys of chunk(notFoundKeys, 2000)) {
+        results.push(...((await this.redisCache.mget(...keys)) as Array<string | undefined>));
+      }
 
       for (let index = 0; index < notFoundKeys.length; index++) {
         if (results[index] !== undefined && results[index] !== null) {
