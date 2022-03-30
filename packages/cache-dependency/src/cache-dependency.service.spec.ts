@@ -276,12 +276,14 @@ describe.each(["memory", "redis"])("store: %s", (storeName: string) => {
           "A-B-C": 1,
           "A-B-D": 1,
           "A-C-D": 1,
+          "B-C": 1,
         });
 
         await expect(service.getKeys("A-*")).resolves.toEqual(["A-A", "A-B", "A-B-C", "A-B-D", "A-C-D"]);
         await expect(service.getKeys("A-B-*")).resolves.toEqual(["A-B-C", "A-B-D"]);
         await expect(service.getKeys("A-*-D")).resolves.toEqual(["A-B-D", "A-C-D"]);
         await expect(service.getKeys("*-B-*")).resolves.toEqual(["A-B-C", "A-B-D"]);
+        await expect(service.getKeys("B-*")).resolves.toEqual(["B-C"]);
       });
     });
 
