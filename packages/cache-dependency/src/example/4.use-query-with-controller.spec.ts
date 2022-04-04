@@ -8,6 +8,7 @@ import {
   NotFoundException,
   Param,
   ParseIntPipe,
+  Query,
   UseInterceptors,
 } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
@@ -53,16 +54,24 @@ export class ExampleController {
   constructor(private readonly service: ExampleService) {}
 
   @Get("users/:userId/items")
-  @CacheKey("users/:userId/items")
-  @CacheDependency<Item[]>((cacheKey: string, items: Item[], graph: CacheDependencyGraph) => {
-    for (const item of items) {
-      // e.g. users/1/items/2
-      graph.addNode(`${cacheKey}/${item.id}`, item);
-      graph.addDependency(`${cacheKey}/${item.id}`, cacheKey);
-    }
-  })
-  public getItems(): Item[] {
-    return this.service.getItems();
+  @CacheKey("users/:userId/items?name=:name")
+  @CacheDependency<Item[]>(
+    (cacheKey: string, items: Item[], graph: CacheDependencyGraph, rawParams: { userId: string }) => {
+      const key = `users/${rawParams.userId}/items`;
+
+      for (const item of items) {
+        // e.g. users/1/items/2
+        graph.addNode(`${key}/${item.id}`, item);
+
+        // When an item is updated, it should be deleted both when filtered by name and when not.
+        graph.addNode(key);
+        graph.addDependency(`${key}/${item.id}`, key);
+        graph.addDependency(`${key}/${item.id}`, cacheKey);
+      }
+    },
+  )
+  public getItemsByName(@Query("name") name: string): Item[] {
+    return this.service.getItems().filter((item) => item.name === name);
   }
 
   @Get("users/:userId/items/:itemId")
@@ -92,7 +101,7 @@ export class ExampleController {
 })
 export class ExampleModule {}
 
-describe("1. Use with Controller", () => {
+describe("4. Use query with Controller", () => {
   it("test", async () => {
     const module = await Test.createTestingModule({
       imports: [ExampleModule],
@@ -105,46 +114,21 @@ describe("1. Use with Controller", () => {
 
     await expect(service.getKeys()).resolves.toEqual(["users/1000/items/1"]);
 
-    // cache
-    await request(app.getHttpServer()).get(`/users/1000/items/1`).expect(200).expect({ id: 1, name: "Item 1" });
-
     await request(app.getHttpServer())
       .get(`/users/1000/items`)
+      .query({ name: "Item 1" })
       .expect(200)
-      .expect([
-        { id: 1, name: "Item 1" },
-        { id: 2, name: "Item 2" },
-        { id: 3, name: "Item 3" },
-        { id: 4, name: "Item 4" },
-        { id: 5, name: "Item 5" },
-      ]);
+      .expect([{ id: 1, name: "Item 1" }]);
 
     await expect(service.getKeys()).resolves.toEqual([
       "cache-dependency:users/1000/items/1",
-      "cache-dependency:users/1000/items/2",
-      "cache-dependency:users/1000/items/3",
-      "cache-dependency:users/1000/items/4",
-      "cache-dependency:users/1000/items/5",
-      `users/1000/items`,
       "users/1000/items/1",
-      "users/1000/items/2",
-      "users/1000/items/3",
-      "users/1000/items/4",
-      "users/1000/items/5",
+      "users/1000/items?name=Item%201",
     ]);
 
-    await request(app.getHttpServer()).delete(`/users/1000/items/2`).expect(200).expect({});
+    await request(app.getHttpServer()).delete(`/users/1000/items/1`).expect(200).expect({});
 
-    await expect(service.getKeys()).resolves.toEqual([
-      "cache-dependency:users/1000/items/1",
-      "cache-dependency:users/1000/items/3",
-      "cache-dependency:users/1000/items/4",
-      "cache-dependency:users/1000/items/5",
-      "users/1000/items/1",
-      "users/1000/items/3",
-      "users/1000/items/4",
-      "users/1000/items/5",
-    ]);
+    await expect(service.getKeys()).resolves.toEqual([]);
 
     await app.close();
   });

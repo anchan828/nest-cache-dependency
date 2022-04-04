@@ -5,7 +5,12 @@ import { RedisOptions } from "ioredis";
  * Wraps dependency-graph
  */
 export type CacheDependencyGraph = DepGraph<any>;
-export type CacheDependencyFunction<T> = (cacheKey: string, o: T, graph: CacheDependencyGraph) => void;
+export type CacheDependencyFunction<T, RawParams = any> = (
+  cacheKey: string,
+  o: T,
+  graph: CacheDependencyGraph,
+  rawParams?: RawParams,
+) => void;
 export type CreateCacheDependencyFunction = (graph: CacheDependencyGraph) => void | Promise<void>;
 
 export interface CacheDependencyModuleOptions extends CacheModuleOptions {
