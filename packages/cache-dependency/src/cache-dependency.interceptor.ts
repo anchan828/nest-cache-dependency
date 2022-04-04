@@ -21,7 +21,18 @@ export class CacheDependencyInterceptor implements NestInterceptor {
   }
 
   public async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
-    const params = context.switchToHttp().getRequest().params;
+    const request = context.switchToHttp().getRequest();
+    
+    const routeParams = request.params ?? {};
+    const query = request.query ?? {};
+    
+    let wsParams = {};
+    if (request.handshake) {
+      const wsData = context.switchToWs().getData();
+      if (wsData instanceof Object && !Array.isArray(wsData) && !Buffer.isBuffer(wsData)) wsParams = wsData;
+    }
+    
+    const params = { ...routeParams, ...wsParams, ...query };
     let cacheKey = this.reflector.get(CACHE_KEY_METADATA, context.getHandler()) as string;
 
     if (cacheKey) {
