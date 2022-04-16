@@ -1,6 +1,6 @@
 {
   "name": "@anchan828/nest-cache-common",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,8 +26,8 @@
   },
   "homepage": "https://github.com/anchan828/nest-cache-dependency#readme",
   "devDependencies": {
-    "@nestjs/common": "8.4.3",
-    "cache-manager": "3.6.0",
+    "@nestjs/common": "8.4.4",
+    "cache-manager": "3.6.1",
     "rxjs": "7.5.5"
   },
   "peerDependencies": {
