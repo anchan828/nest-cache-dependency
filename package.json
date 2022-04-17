@@ -5,17 +5,20 @@
   "description": "The cache module for [Nest](https://github.com/nestjs/nest).",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "postinstall": "husky install && npm run bootstrap && npm run build",
+    "postinstall": "husky install",
     "bootstrap": "lerna bootstrap",
-    "build": "lerna run build",
+    "build": "turbo run build",
     "format": "prettier --write '**/*.{js,json,yml,yaml,md}'",
-    "lint": "lerna run --parallel lint",
-    "lint:fix": "lerna run --parallel lint:fix",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
     "publish": "lerna publish --yes patch",
     "publish:minor": "lerna publish --yes minor",
     "publish:major": "lerna publish --yes major",
-    "test": "lerna run test && npx @anchan828/merge-coverage"
+    "test": "turbo run test"
   },
   "repository": {
     "type": "git",
@@ -45,16 +48,17 @@
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-prettier": "4.0.0",
     "husky": "7.0.4",
-    "lru-cache": "7.8.1",
     "jest": "27.5.1",
-    "lerna": "4.0.0",
+    "@lerna-lite/cli": "1.0.5",
     "lint-staged": "12.3.8",
+    "lru-cache": "7.8.1",
     "prettier": "2.6.2",
     "reflect-metadata": "0.1.13",
     "rxjs": "7.5.5",
     "supertest": "6.2.2",
     "ts-jest": "27.1.4",
     "ts-node": "10.7.0",
+    "turbo": "1.2.4",
     "typescript": "4.6.3",
     "ulid": "2.3.0"
   }
