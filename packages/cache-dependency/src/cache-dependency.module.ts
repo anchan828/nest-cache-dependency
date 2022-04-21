@@ -6,7 +6,7 @@ import {
   Global,
   Inject,
   Module,
-  OnModuleDestroy,
+  OnApplicationShutdown,
   OnModuleInit,
   Provider,
   Type,
@@ -30,7 +30,7 @@ import { CACHE_DEPENDENCY_MODULE_OPTIONS } from "./constants";
  */
 @Global()
 @Module({})
-export class CacheDependencyModule implements OnModuleInit, OnModuleDestroy {
+export class CacheDependencyModule implements OnModuleInit, OnApplicationShutdown {
   private pubsubServices: CacheDependencyPubSubService[] = [];
 
   constructor(
@@ -53,7 +53,7 @@ export class CacheDependencyModule implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  async onModuleDestroy(): Promise<void> {
+  async onApplicationShutdown(): Promise<void> {
     for (const pubsubService of this.pubsubServices) {
       await pubsubService.close();
     }
