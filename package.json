@@ -50,7 +50,7 @@
     "husky": "7.0.4",
     "jest": "27.5.1",
     "lint-staged": "12.4.1",
-    "lru-cache": "7.8.1",
+    "lru-cache": "7.9.0",
     "prettier": "2.6.2",
     "reflect-metadata": "0.1.13",
     "rxjs": "7.5.5",
