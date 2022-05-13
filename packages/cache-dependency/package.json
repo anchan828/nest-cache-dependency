@@ -38,7 +38,7 @@
     "@nestjs/common": "8.4.4",
     "@nestjs/config": "2.0.0",
     "@types/cache-manager": "3.4.3",
-    "@types/lru-cache": "7.6.1",
+    "@types/lru-cache": "7.10.9",
     "@types/route-parser": "0.1.4",
     "ioredis": "5.0.4",
     "lru-cache": "7.10.1",
