@@ -169,9 +169,8 @@ export class CacheDependencyService {
 
     keys = Array.from(new Set(keys));
 
-    await this.cacheManager.del(...keys);
-
     this.emitter.emit("deleted", keys);
+    await this.cacheManager.del(...keys);
   }
 
   /**
