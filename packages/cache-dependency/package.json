@@ -40,7 +40,7 @@
     "@types/cache-manager": "3.4.3",
     "@types/lru-cache": "7.10.9",
     "@types/route-parser": "0.1.4",
-    "ioredis": "5.0.5",
+    "ioredis": "5.0.6",
     "lru-cache": "7.10.1",
     "rxjs": "7.5.5"
   },
