@@ -2,11 +2,11 @@ import { redisStore } from "@anchan828/nest-cache-manager-ioredis";
 import { CACHE_MANAGER } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { caching } from "cache-manager";
+import { setTimeout } from "timers/promises";
 import { CacheDependencyEventEmitter } from "./cache-dependency.emitter";
 import { CacheDependencyGraph } from "./cache-dependency.interface";
 import { CacheDependencyService } from "./cache-dependency.service";
 import { CACHE_DEPENDENCY_MODULE_OPTIONS } from "./constants";
-import { wait } from "./test.utils";
 
 describe.each(["memory", "redis"])("store: %s", (storeName: string) => {
   describe.each(["", "v1", "next", "dev"])("CacheDependencyService version: %s", (version: string) => {
@@ -22,8 +22,9 @@ describe.each(["memory", "redis"])("store: %s", (storeName: string) => {
               storeName === "memory"
                 ? caching({
                     store: "memory",
-                    max: Number.MAX_SAFE_INTEGER,
                     ttl: 1000,
+                    maxSize: 500,
+                    sizeCalculation: () => 1,
                   })
                 : caching({
                     store: redisStore,
@@ -85,7 +86,7 @@ describe.each(["memory", "redis"])("store: %s", (storeName: string) => {
         await expect(service.get("test")).resolves.toBeUndefined();
         await service.set("test", 1, 1);
         await expect(service.get("test")).resolves.toBe(1);
-        await wait(2000);
+        await setTimeout(1100);
         await expect(service.get("test")).resolves.toBeUndefined();
       });
 
