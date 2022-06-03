@@ -132,7 +132,7 @@ export class CacheDependencyService {
   }
 
   /**
-   * Set cache to store. ttl is 999999 for now.
+   * Set cache to store.
    *
    * @param {string} key
    * @param {unknown} value

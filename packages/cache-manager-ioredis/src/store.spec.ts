@@ -13,6 +13,7 @@ describe("RedisStore", () => {
     store = caching({
       store: redisStore,
       host: process.env.REDIS_HOST || "localhost",
+      db: 1,
       ttl: 5,
     } as any) as any as CacheManager;
     redis = (store as any).store;
@@ -20,6 +21,7 @@ describe("RedisStore", () => {
     store2 = caching({
       store: redisStore,
       host: process.env.REDIS_HOST || "localhost",
+      db: 2,
       ttl: 5,
     } as any) as any as CacheManager;
 
@@ -145,7 +147,7 @@ describe("RedisStore", () => {
       store: redisStore,
       host: process.env.REDIS_HOST || "localhost",
       ttl: 10,
-      db: 2,
+      db: 3,
       keyPrefix: "changed:",
     } as any) as any as CacheManager;
     const key = "key";
@@ -203,6 +205,7 @@ describe("In-memory cache", () => {
       store: redisStore as any,
       host: process.env.REDIS_HOST || "localhost",
       ttl: 5,
+      db: 4,
       inMemory: {
         enabled: true,
         hitCache: hitCacheFn,

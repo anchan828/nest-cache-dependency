@@ -1,9 +1,9 @@
 import { redisStore } from "@anchan828/nest-cache-manager-ioredis";
 import { Test, TestingModule } from "@nestjs/testing";
 import * as LRUCache from "lru-cache";
+import { setTimeout } from "timers/promises";
 import { CacheDependencyModule } from "./cache-dependency.module";
 import { CacheDependencyService } from "./cache-dependency.service";
-import { wait } from "./test.utils";
 describe("CacheDependencyPubSubService", () => {
   let apps: TestingModule[] = [];
   beforeEach(async () => {
@@ -27,7 +27,7 @@ describe("CacheDependencyPubSubService", () => {
   });
 
   afterEach(async () => {
-    await wait(500);
+    await setTimeout(500);
     await Promise.all(apps.map((app) => app.close()));
   });
 
@@ -84,7 +84,7 @@ describe("CacheDependencyPubSubService", () => {
 
     await service.clearCacheDependencies("key1");
 
-    await wait(1000);
+    await setTimeout(1000);
 
     expect(
       apps
